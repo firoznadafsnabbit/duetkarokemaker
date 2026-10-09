@@ -732,6 +732,237 @@
   color: #ff6b6b;
 }
 
+/* TOPUP LIVE CALCULATION STRIP */
+.topup-live-calc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.calc-tag {
+  color: var(--text-muted);
+}
+.calc-tag b {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+.calc-tag.accent b {
+  color: var(--brand-cyan);
+}
+.calc-tag.success b {
+  color: #2ecc71;
+}
+
+/* APPROVAL MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+  animation: fadeInModal 0.2s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.approval-modal-box {
+  background: #141724;
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  border-radius: var(--radius-xl);
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(0, 242, 254, 0.15);
+  animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(20px) scale(0.97); }
+  to { transform: translateY(0) scale(1); }
+}
+
+.approval-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.approval-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.approval-header h3 {
+  font-size: 1.25rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.approval-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.approval-user-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.approval-user-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.approval-user-email {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+}
+
+/* MATH CALCULATION GRID */
+.credits-math-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px 14px;
+  margin-bottom: 24px;
+  gap: 6px;
+}
+
+.math-box {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.math-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.math-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.math-box.accent .math-val {
+  color: var(--brand-cyan);
+}
+
+.math-box.total {
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: var(--radius-md);
+  padding: 6px 4px;
+}
+
+.math-box.total .math-val {
+  color: #2ecc71;
+}
+
+.math-symbol {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+
+/* ACTIONS */
+.approval-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel-approval {
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-cancel-approval:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.btn-approve-credit {
+  flex: 1;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #2ecc71 0%, #00f2fe 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #000;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-approve-credit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(46, 204, 113, 0.55);
+}
+
+.btn-approve-credit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .admin-header {

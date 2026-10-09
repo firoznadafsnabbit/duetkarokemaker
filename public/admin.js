@@ -247,24 +247,86 @@ async function setCredits(userId, email, newCredits) {
   }
 }
 
-// Quick Add Helper
-window.quickAddCredits = function(userId, email, current, amount) {
-  const next = (current || 0) + amount;
-  setCredits(userId, email, next);
-};
+// Approval State
+let pendingApproval = null;
 
-// Quick Set Helper
-window.quickSetCredits = function(userId, email, amount) {
-  if (confirm(`Are you sure you want to set credits for ${email} to ${amount}?`)) {
-    setCredits(userId, email, amount);
+function openApprovalModal({ userId, email, remaining, added, newTotal, isReset = false }) {
+  pendingApproval = { userId, email, newTotal };
+
+  const modal = document.getElementById('credit-approval-modal');
+  const title = document.getElementById('approve-modal-title');
+  const icon = document.getElementById('approve-icon');
+  const emailEl = document.getElementById('approve-modal-email');
+  const remEl = document.getElementById('approve-remaining-val');
+  const addEl = document.getElementById('approve-added-val');
+  const addLabel = document.getElementById('approve-added-label');
+  const mathSymbol = document.getElementById('approve-math-symbol');
+  const totEl = document.getElementById('approve-total-val');
+  const confirmBtn = document.getElementById('btn-confirm-approval');
+
+  if (!modal) return;
+
+  emailEl.textContent = email;
+  remEl.textContent = `${remaining} Songs`;
+
+  if (isReset) {
+    title.textContent = 'Confirm Credit Reset';
+    icon.textContent = '🚨';
+    addLabel.textContent = 'Deducting';
+    mathSymbol.textContent = '-';
+    addEl.textContent = `-${remaining} Songs`;
+    addEl.className = 'math-val text-danger';
+    totEl.textContent = '0 Songs';
+    totEl.className = 'math-val text-danger';
+    confirmBtn.textContent = '✕ Approve Reset to 0';
+    confirmBtn.style.background = 'linear-gradient(135deg, #ff4b4b 0%, #e74c3c 100%)';
+  } else {
+    title.textContent = 'Confirm Credit Top-Up';
+    icon.textContent = '⚡';
+    addLabel.textContent = 'Added Credits';
+    mathSymbol.textContent = '+';
+    addEl.textContent = `+${added} Songs`;
+    addEl.className = 'math-val text-accent';
+    totEl.textContent = `${newTotal} Songs`;
+    totEl.className = 'math-val text-success';
+    confirmBtn.textContent = '✓ Approve & Add Credits';
+    confirmBtn.style.background = 'linear-gradient(135deg, #2ecc71 0%, #00f2fe 100%)';
   }
+
+  modal.style.display = 'flex';
+}
+
+function closeApprovalModal() {
+  const modal = document.getElementById('credit-approval-modal');
+  if (modal) modal.style.display = 'none';
+  pendingApproval = null;
+}
+
+// Quick Add Helper: Requests Approval first!
+window.quickAddCredits = function(userId, email, current, amount) {
+  const remaining = current || 0;
+  const added = amount;
+  const newTotal = remaining + added;
+  openApprovalModal({ userId, email, remaining, added, newTotal, isReset: false });
 };
 
-// Custom Prompt Helper
+// Quick Set Helper: Requests Reset Approval!
+window.quickSetCredits = function(userId, email, amount) {
+  const user = allUsers.find(u => (userId && u.id === userId) || u.email === email);
+  const remaining = user ? (user.credits || 0) : 0;
+  openApprovalModal({ userId, email, remaining, added: 0, newTotal: 0, isReset: true });
+};
+
+// Custom Prompt Helper: Requests Approval!
 window.promptCustomCredits = function(userId, email, current) {
-  const input = prompt(`Enter total credits for ${email}:`, current || 0);
-  if (input !== null && !isNaN(parseInt(input, 10))) {
-    setCredits(userId, email, parseInt(input, 10));
+  const remaining = current || 0;
+  const input = prompt(`Enter how many credits to ADD to ${email} (e.g. 10, 25, 50, 100):`, '10');
+  if (input !== null) {
+    const addAmount = parseInt(input, 10);
+    if (!isNaN(addAmount) && addAmount > 0) {
+      const newTotal = remaining + addAmount;
+      openApprovalModal({ userId, email, remaining, added: addAmount, newTotal, isReset: false });
+    }
   }
 };
 
@@ -292,6 +354,28 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+// Live calculation updater for Quick Grant card
+function updateTopupCalcPreview() {
+  const emailInput = document.getElementById('direct-email-input');
+  const amountInput = document.getElementById('direct-amount-input');
+  if (!emailInput || !amountInput) return;
+
+  const email = emailInput.value.trim().toLowerCase();
+  const amount = parseInt(amountInput.value, 10) || 0;
+
+  const existing = allUsers.find(u => (u.email || '').toLowerCase() === email);
+  const remaining = existing ? (existing.credits || 0) : 0;
+  const total = remaining + amount;
+
+  const remEl = document.getElementById('calc-preview-remaining');
+  const addEl = document.getElementById('calc-preview-added');
+  const totEl = document.getElementById('calc-preview-total');
+
+  if (remEl) remEl.textContent = existing ? `${remaining} Songs` : (email ? '0 (New user)' : '--');
+  if (addEl) addEl.textContent = `+${amount} Songs`;
+  if (totEl) totEl.textContent = `${total} Songs`;
 }
 
 // DOM Setup
@@ -377,20 +461,30 @@ window.addEventListener('DOMContentLoaded', () => {
     showToast('Refreshing user list...', 'success');
   });
 
-  // Direct Top-up Form
+  // Live calculation preview listeners
+  document.getElementById('direct-email-input')?.addEventListener('input', updateTopupCalcPreview);
+  document.getElementById('direct-amount-input')?.addEventListener('input', updateTopupCalcPreview);
+
+  // Direct Top-up Form: Opens Approval Modal!
   document.getElementById('form-direct-topup').addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('direct-email-input').value.trim();
     const amount = parseInt(document.getElementById('direct-amount-input').value, 10);
-    if (!email || isNaN(amount)) return;
+    if (!email || isNaN(amount) || amount <= 0) return;
 
     // Check if user exists in list
-    const existing = allUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
-    const current = existing ? (existing.credits || 0) : 0;
-    const next = current + amount;
+    const existing = allUsers.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+    const remaining = existing ? (existing.credits || 0) : 0;
+    const newTotal = remaining + amount;
 
-    setCredits(existing ? existing.id : null, email, next);
-    document.getElementById('direct-email-input').value = '';
+    openApprovalModal({
+      userId: existing ? existing.id : null,
+      email,
+      remaining,
+      added: amount,
+      newTotal,
+      isReset: false
+    });
   });
 
   // Direct Top-up Presets (+5, +10, +20, +50)
@@ -400,7 +494,33 @@ window.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
       const val = btn.getAttribute('data-amount');
       document.getElementById('direct-amount-input').value = val;
+      updateTopupCalcPreview();
     });
+  });
+
+  // Approval Modal: Confirm button
+  document.getElementById('btn-confirm-approval')?.addEventListener('click', async () => {
+    if (!pendingApproval) return;
+    const { userId, email, newTotal } = pendingApproval;
+    const btn = document.getElementById('btn-confirm-approval');
+    btn.disabled = true;
+    btn.textContent = 'Approving & Syncing...';
+
+    await setCredits(userId, email, newTotal);
+
+    btn.disabled = false;
+    closeApprovalModal();
+    const emailInput = document.getElementById('direct-email-input');
+    if (emailInput) emailInput.value = '';
+    updateTopupCalcPreview();
+  });
+
+  // Approval Modal: Cancel button
+  document.getElementById('btn-cancel-approval')?.addEventListener('click', closeApprovalModal);
+
+  // Click backdrop to cancel approval
+  document.getElementById('credit-approval-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'credit-approval-modal') closeApprovalModal();
   });
 
   // Search input live filter

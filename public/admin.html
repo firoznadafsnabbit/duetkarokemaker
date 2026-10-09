@@ -134,7 +134,12 @@
                 <button type="button" class="btn-preset" data-amount="50">+50</button>
               </div>
               <input type="number" id="direct-amount-input" min="1" max="1000" value="10" title="Custom Amount">
-              <button type="submit" class="btn-grant-credits" id="btn-grant-submit">Grant Credits</button>
+              <button type="submit" class="btn-grant-credits" id="btn-grant-submit">✓ Review & Approve</button>
+            </div>
+            <div class="topup-live-calc" id="topup-live-calc">
+              <span class="calc-tag">Remaining: <b id="calc-preview-remaining">--</b></span>
+              <span class="calc-tag accent">+ Adding: <b id="calc-preview-added">+10</b></span>
+              <span class="calc-tag success">= Total: <b id="calc-preview-total">--</b></span>
             </div>
           </form>
         </div>
@@ -162,9 +167,9 @@
             <thead>
               <tr>
                 <th>User Email</th>
-                <th>Current Credits</th>
+                <th>Remaining Credits</th>
                 <th>Joined Date</th>
-                <th>Quick Add Credits</th>
+                <th>Quick Add Credits (+5 / +10 / +25)</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -189,6 +194,46 @@
         </div>
       </section>
     </main>
+
+    <!-- CREDIT APPROVAL CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="credit-approval-modal" style="display: none;">
+      <div class="approval-modal-box">
+        <div class="approval-header">
+          <div class="approval-icon" id="approve-icon">⚡</div>
+          <div>
+            <h3 id="approve-modal-title">Confirm Credit Update</h3>
+            <p class="approval-sub">Please review the calculation before approving:</p>
+          </div>
+        </div>
+
+        <div class="approval-user-card">
+          <span class="approval-user-label">Target Customer:</span>
+          <span class="approval-user-email" id="approve-modal-email">user@gmail.com</span>
+        </div>
+
+        <div class="credits-math-card">
+          <div class="math-box">
+            <span class="math-label">Remaining Credits</span>
+            <span class="math-val" id="approve-remaining-val">0</span>
+          </div>
+          <div class="math-symbol" id="approve-math-symbol">+</div>
+          <div class="math-box accent">
+            <span class="math-label" id="approve-added-label">Added Credits</span>
+            <span class="math-val" id="approve-added-val">+10</span>
+          </div>
+          <div class="math-symbol">=</div>
+          <div class="math-box total">
+            <span class="math-label">Total Credits</span>
+            <span class="math-val text-success" id="approve-total-val">10</span>
+          </div>
+        </div>
+
+        <div class="approval-footer">
+          <button type="button" class="btn-cancel-approval" id="btn-cancel-approval">Cancel</button>
+          <button type="button" class="btn-approve-credit" id="btn-confirm-approval">✓ Approve & Add Credits</button>
+        </div>
+      </div>
+    </div>
 
     <!-- TOAST NOTIFICATION -->
     <div id="admin-toast" class="admin-toast"></div>
