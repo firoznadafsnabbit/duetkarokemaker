@@ -167,14 +167,14 @@
           <button type="button" class="btn-auth-trigger" id="btn-open-auth">
             <span class="auth-btn-icon">🔑</span>
             <span>Sign In</span>
-            <span class="badge-free-trial">🎁 3 Free Songs</span>
           </button>
 
           <div class="user-profile-chip" id="user-profile-chip" style="display: none;">
-            <div class="credits-pill" id="credits-pill" title="Remaining song generations">
-              <span class="credits-icon">⚡</span>
-              <span class="credits-count" id="user-credits-val">3</span>
-              <span class="credits-label">Songs Left</span>
+            <div class="credits-pill" id="credits-pill" title="Click to recharge tokens (2 tokens = 1 video)">
+              <span class="credits-icon">🪙</span>
+              <span class="credits-count" id="user-credits-val">0</span>
+              <span class="credits-label" id="user-credits-label">Tokens</span>
+              <span class="credits-recharge-btn">+ Add</span>
             </div>
             <span class="user-email-text" id="user-email-display">user@example.com</span>
             <button type="button" class="btn-logout" id="btn-logout" title="Sign Out">
@@ -655,52 +655,125 @@
               <label for="auth-signup-confirm">Confirm Password</label>
               <input type="password" id="auth-signup-confirm" class="form-input" placeholder="••••••••" minlength="6" required autocomplete="new-password">
             </div>
-            <button type="submit" class="btn btn-accent btn-block btn-auth-submit">Create Account & Claim 3 Free Songs</button>
+            <button type="submit" class="btn btn-accent btn-block btn-auth-submit">Create Account</button>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- 2. Out of Credits Contact / WhatsApp Popup -->
+    <!-- 2. Recharge Tokens & UPI Payment Modal -->
     <div class="modal-overlay" id="credits-contact-modal" style="display: none;">
-      <div class="modal-content contact-modal-box">
+      <div class="modal-content contact-modal-box recharge-modal-box">
         <div class="modal-header">
           <div class="contact-header-badge">
-            <span class="pulse-spark">⚠️</span>
-            <h3>Out of Free Song Credits</h3>
+            <span class="pulse-spark">🪙</span>
+            <div>
+              <h3>Recharge Video Tokens</h3>
+              <p class="recharge-header-sub">₹5 per Token • 2 Tokens per Video Render</p>
+            </div>
           </div>
           <button class="modal-close-btn" id="btn-close-contact-modal" title="Close">✕</button>
         </div>
 
         <div class="modal-body contact-modal-body">
-          <div class="contact-hero-art">
-            <span class="contact-hero-icon">💎</span>
-          </div>
-
-          <h4 class="contact-headline">You've Used All 3 Free Song Generations!</h4>
-          <p class="contact-subtext">
-            Want to render more high-definition duet karaoke videos? Contact Armaan directly to top up your account with more song credits.
-          </p>
-
-          <div class="contact-account-card">
-            <span class="account-card-label">Your Registered Account:</span>
-            <div class="account-card-row">
+          <!-- User Account Info & Current Balance -->
+          <div class="recharge-account-card">
+            <div class="recharge-acc-left">
+              <span class="account-card-label">Your Account:</span>
               <span class="account-card-email" id="contact-user-email">loading...</span>
-              <button type="button" class="btn-copy-chip" id="btn-copy-user-email">📋 Copy Email</button>
+            </div>
+            <div class="recharge-acc-right">
+              <span class="account-card-label">Current Balance:</span>
+              <span class="recharge-balance-pill">
+                <span id="contact-current-tokens">0</span> Tokens (<span id="contact-current-videos">0</span> Videos)
+              </span>
             </div>
           </div>
 
+          <!-- Token Packages Grid -->
+          <div class="recharge-section-title">
+            <span>Select Token Package</span>
+            <span class="rate-tag">₹5 / Token</span>
+          </div>
+
+          <div class="token-packages-grid">
+            <div class="token-pkg-card" data-tokens="10">
+              <span class="pkg-tokens">10 Tokens</span>
+              <span class="pkg-videos">🎬 5 Videos</span>
+              <span class="pkg-price">₹50</span>
+            </div>
+            <div class="token-pkg-card active" data-tokens="20">
+              <span class="pkg-badge-popular">Popular</span>
+              <span class="pkg-tokens">20 Tokens</span>
+              <span class="pkg-videos">🎬 10 Videos</span>
+              <span class="pkg-price">₹100</span>
+            </div>
+            <div class="token-pkg-card" data-tokens="40">
+              <span class="pkg-tokens">40 Tokens</span>
+              <span class="pkg-videos">🎬 20 Videos</span>
+              <span class="pkg-price">₹200</span>
+            </div>
+            <div class="token-pkg-card" data-tokens="100">
+              <span class="pkg-badge-value">Best Value</span>
+              <span class="pkg-tokens">100 Tokens</span>
+              <span class="pkg-videos">🎬 50 Videos</span>
+              <span class="pkg-price">₹500</span>
+            </div>
+          </div>
+
+          <!-- Custom Quantity Stepper -->
+          <div class="custom-tokens-stepper">
+            <span class="stepper-label">Custom Quantity:</span>
+            <div class="stepper-controls">
+              <button type="button" class="btn-stepper" id="btn-token-minus">-</button>
+              <input type="number" id="token-quantity-input" value="20" min="2" step="2" class="stepper-input">
+              <button type="button" class="btn-stepper" id="btn-token-plus">+</button>
+            </div>
+            <span class="stepper-hint">Tokens (2 per video)</span>
+          </div>
+
+          <!-- Live Order Summary Card -->
+          <div class="recharge-summary-card">
+            <div class="summary-line">
+              <span class="summary-label">Selected Tokens:</span>
+              <strong id="summary-tokens-num" class="summary-val">20 Tokens</strong>
+            </div>
+            <div class="summary-line">
+              <span class="summary-label">Videos You Can Render:</span>
+              <strong id="summary-videos-num" class="summary-val text-cyan">10 Full Videos</strong>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-line total-line">
+              <span class="summary-label total-label">Total Payable Amount:</span>
+              <span id="summary-total-price" class="summary-total-val">₹100</span>
+            </div>
+          </div>
+
+          <!-- UPI Payment Details -->
+          <div class="upi-payment-box">
+            <div class="upi-box-header">
+              <span class="upi-icon">💳</span>
+              <span class="upi-title">Pay via UPI:</span>
+              <span class="upi-id-code" id="upi-id-display">feroznadaf13008@ybl</span>
+              <button type="button" class="btn-copy-chip" id="btn-copy-upi">📋 Copy UPI</button>
+            </div>
+            <a href="#" class="btn-upi-intent" id="btn-upi-intent-pay">
+              <span>⚡ Open UPI App (GPay / PhonePe / Paytm / BHIM)</span>
+            </a>
+          </div>
+
+          <!-- WhatsApp Payment Request Button -->
           <div class="contact-actions-grid">
-            <a href="https://wa.me/919663396058" target="_blank" class="btn-whatsapp-cta" id="btn-contact-whatsapp">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <a href="#" target="_blank" class="btn-whatsapp-cta" id="btn-contact-whatsapp">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                 <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.997.545 1.765.801 2.796.801 3.184 0 5.768-2.587 5.769-5.766.001-3.182-2.583-5.768-5.769-5.768zm0 10.428c-.886 0-1.637-.253-2.348-.675l-.168-.1-1.577.414.421-1.537-.11-.176c-.464-.738-.709-1.474-.709-2.586 0-2.569 2.091-4.66 4.661-4.66 2.57 0 4.661 2.091 4.661 4.66 0 2.57-2.091 4.66-4.661 4.66zm6.815-11.458c-1.821-1.823-4.24-2.827-6.815-2.827-5.309 0-9.63 4.321-9.631 9.632 0 1.697.444 3.353 1.288 4.816l-1.368 4.996 5.115-1.342c1.409.768 2.999 1.173 4.624 1.173h.004c5.309 0 9.63-4.321 9.632-9.632.001-2.574-1.002-4.993-2.826-6.816z"/>
               </svg>
-              <span>Chat on WhatsApp to Add Credits (+91 96633 96058)</span>
+              <span>Send Payment Confirmation on WhatsApp</span>
             </a>
           </div>
 
           <div class="contact-footer-note">
-            <span>⚡ Instant activation: Send your email ID on WhatsApp, complete UPI payment, and credits are added within seconds!</span>
+            <span>⚡ Instant Activation: Complete UPI payment, send the confirmation message on WhatsApp, and tokens will be credited within 2 minutes!</span>
           </div>
         </div>
       </div>

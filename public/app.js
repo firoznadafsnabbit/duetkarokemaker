@@ -929,7 +929,7 @@ Remaining lines: only the timestamped duet karaoke lines.`;
 async function runOneClickAutoDuet() {
   // STRICT AUTH GUARD: Must be signed in to generate songs
   if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
-    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to generate karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to generate karaoke songs!');
     return;
   }
 
@@ -1281,7 +1281,7 @@ const presentRenderedVideo = ({ url, filename, description }) => {
 async function renderVideoLive() {
   // STRICT AUTH GUARD: Must be signed in to render video
   if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
-    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs!');
     return;
   }
 
@@ -1442,7 +1442,7 @@ async function renderVideoLive() {
 async function renderVideoWithFfmpeg() {
   // STRICT AUTH GUARD: Must be signed in to render video
   if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
-    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs!');
     return;
   }
 
@@ -1621,7 +1621,7 @@ function initEventListeners() {
     }
     const user = window.KaraokeAuth.getCurrentUser();
     if (!user) {
-      window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+      window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs!');
       return false;
     }
     return window.KaraokeAuth.guardCreditAction(fn);

@@ -11,7 +11,10 @@ const SUPABASE_CONFIG = {
   url: 'https://odvgmniswfpahwkqwtcw.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kdmdtbmlzd2ZwYWh3a3F3dGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzE4MTksImV4cCI6MjEwNzEwNzgxOX0.dl3gytRtsokArFxN_VH2nMABfAF35757ghOnm-dYESs',
   whatsappNumber: '919663396058',
-  freeCredits: 3
+  upiId: 'feroznadaf13008@ybl',
+  tokenRate: 5,        // ₹5 per token
+  tokensPerVideo: 2,   // 2 tokens needed to render 1 video
+  freeCredits: 6       // 6 tokens bonus (3 videos)
 };
 
 let supabaseClient = null;
@@ -84,6 +87,7 @@ function updateAuthUI() {
   const profileChip = document.getElementById('user-profile-chip');
   const userEmailDisplay = document.getElementById('user-email-display');
   const userCreditsVal = document.getElementById('user-credits-val');
+  const userCreditsLabel = document.getElementById('user-credits-label');
   const creditsPill = document.getElementById('credits-pill');
 
   if (!authBar) return;
@@ -93,12 +97,16 @@ function updateAuthUI() {
     if (profileChip) profileChip.style.display = 'inline-flex';
     if (userEmailDisplay) userEmailDisplay.textContent = currentUser.email || 'Singer';
     if (userCreditsVal) userCreditsVal.textContent = currentCredits;
+    if (userCreditsLabel) userCreditsLabel.textContent = 'Tokens';
+
+    const videosCount = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
 
     if (creditsPill) {
+      creditsPill.setAttribute('title', `${currentCredits} Tokens available (${videosCount} full video${videosCount === 1 ? '' : 's'}). Click to recharge tokens.`);
       creditsPill.classList.remove('zero', 'low', 'good');
-      if (currentCredits <= 0) {
+      if (currentCredits < SUPABASE_CONFIG.tokensPerVideo) {
         creditsPill.classList.add('zero');
-      } else if (currentCredits === 1) {
+      } else if (currentCredits < SUPABASE_CONFIG.tokensPerVideo * 2) {
         creditsPill.classList.add('low');
       } else {
         creditsPill.classList.add('good');
@@ -108,13 +116,21 @@ function updateAuthUI() {
     if (btnOpenAuth) btnOpenAuth.style.display = 'inline-flex';
     if (profileChip) profileChip.style.display = 'none';
   }
+
+  // Sync token balance in open recharge modal if present
+  const modalTokensVal = document.getElementById('contact-current-tokens');
+  const modalVideosVal = document.getElementById('contact-current-videos');
+  const modalEmailVal = document.getElementById('contact-user-email');
+  if (modalTokensVal) modalTokensVal.textContent = currentCredits;
+  if (modalVideosVal) modalVideosVal.textContent = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
+  if (modalEmailVal && currentUser?.email) modalEmailVal.textContent = currentUser.email;
 }
 
-async function deductSongCredit() {
+async function deductSongCredit(amount = SUPABASE_CONFIG.tokensPerVideo) {
   if (!currentUser) return false;
-  if (currentCredits <= 0) return false;
+  if (currentCredits < amount) return false;
 
-  const nextCredits = currentCredits - 1;
+  const nextCredits = Math.max(0, currentCredits - amount);
   currentCredits = nextCredits;
   updateAuthUI();
 
@@ -125,7 +141,7 @@ async function deductSongCredit() {
         .update({ credits: nextCredits })
         .eq('id', currentUser.id);
     } catch (err) {
-      console.warn('[Auth] Failed to sync deducted credit to database:', err);
+      console.warn('[Auth] Failed to sync deducted tokens to database:', err);
     }
   }
 
@@ -177,22 +193,91 @@ function setAuthTab(tab) {
   }
 }
 
-function openOutOfCreditsModal() {
-  const modal = document.getElementById('credits-contact-modal');
-  const emailVal = document.getElementById('contact-user-email');
-  const waBtn = document.getElementById('btn-contact-whatsapp');
-  if (!modal) return;
+let selectedTokens = 20;
 
-  const userEmail = currentUser?.email || 'my-account';
-  if (emailVal) emailVal.textContent = userEmail;
+function selectTokens(tokens) {
+  const parsed = parseInt(tokens, 10);
+  if (isNaN(parsed) || parsed < SUPABASE_CONFIG.tokensPerVideo) {
+    selectedTokens = SUPABASE_CONFIG.tokensPerVideo;
+  } else {
+    selectedTokens = parsed;
+  }
+  updateTokenRechargeUI();
+}
 
-  if (waBtn) {
-    const message = encodeURIComponent(
-      `Hi Armaan! I used my 3 free karaoke songs on Karoke Maker and want to buy more credits for my account:\n📧 Email: ${userEmail}`
-    );
-    waBtn.href = `https://wa.me/${SUPABASE_CONFIG.whatsappNumber}?text=${message}`;
+function updateTokenRechargeUI() {
+  const qtyInput = document.getElementById('token-quantity-input');
+  if (qtyInput && parseInt(qtyInput.value, 10) !== selectedTokens) {
+    qtyInput.value = selectedTokens;
   }
 
+  // Highlight active package card
+  document.querySelectorAll('.token-pkg-card').forEach(card => {
+    const cardTokens = parseInt(card.getAttribute('data-tokens'), 10);
+    if (cardTokens === selectedTokens) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+
+  const videosCount = Math.floor(selectedTokens / SUPABASE_CONFIG.tokensPerVideo);
+  const totalPrice = selectedTokens * SUPABASE_CONFIG.tokenRate;
+  const userEmail = currentUser?.email || 'my-account';
+
+  // Update order summary card
+  const summaryTokens = document.getElementById('summary-tokens-num');
+  const summaryVideos = document.getElementById('summary-videos-num');
+  const summaryPrice = document.getElementById('summary-total-price');
+
+  if (summaryTokens) summaryTokens.textContent = `${selectedTokens} Tokens`;
+  if (summaryVideos) summaryVideos.textContent = `${videosCount} Full Video${videosCount === 1 ? '' : 's'}`;
+  if (summaryPrice) summaryPrice.textContent = `₹${totalPrice}`;
+
+  // Update user balance displays in modal
+  const emailVal = document.getElementById('contact-user-email');
+  const currentTokensVal = document.getElementById('contact-current-tokens');
+  const currentVideosVal = document.getElementById('contact-current-videos');
+  if (emailVal) emailVal.textContent = userEmail;
+  if (currentTokensVal) currentTokensVal.textContent = currentCredits;
+  if (currentVideosVal) currentVideosVal.textContent = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
+
+  // Generate UPI Intent Pay URL
+  const payeeName = 'Duet Karaoke Maker';
+  const upiNote = encodeURIComponent(`Recharge ${selectedTokens} Tokens for ${userEmail}`);
+  const upiUri = `upi://pay?pa=${SUPABASE_CONFIG.upiId}&pn=${encodeURIComponent(payeeName)}&am=${totalPrice}&cu=INR&tn=${upiNote}`;
+
+  const intentPayBtn = document.getElementById('btn-upi-intent-pay');
+  if (intentPayBtn) {
+    intentPayBtn.href = upiUri;
+  }
+
+  // Pre-formatted WhatsApp confirmation message with login email and payment link
+  const waBtn = document.getElementById('btn-contact-whatsapp');
+  if (waBtn) {
+    const waMessage = 
+`🎤 *Duet Karaoke Maker - Token Recharge Request* 🎤
+
+👤 *Login Email:* ${userEmail}
+🪙 *Tokens Needed:* ${selectedTokens} Tokens
+🎬 *Videos to Render:* ${videosCount} Videos (2 tokens/video)
+💰 *Total Amount:* ₹${totalPrice} (₹5/token)
+💳 *UPI ID:* ${SUPABASE_CONFIG.upiId}
+
+🔗 *UPI Payment Link:*
+${upiUri}
+
+I have initiated / completed the payment. Please credit ${selectedTokens} tokens to my account (${userEmail}). Thank you!`;
+
+    waBtn.href = `https://wa.me/${SUPABASE_CONFIG.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
+  }
+}
+
+function openOutOfCreditsModal() {
+  const modal = document.getElementById('credits-contact-modal');
+  if (!modal) return;
+
+  updateTokenRechargeUI();
   modal.style.display = 'flex';
 }
 
@@ -300,7 +385,7 @@ async function handleSignUp(e) {
   } catch (err) {
     showAuthError(err.message || 'Failed to sign up.');
   } finally {
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Account (Get 3 Free Songs)'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Account'; }
   }
 }
 
@@ -529,29 +614,29 @@ function openKeySetupModal(reason = '') {
 
 /**
  * Guard any song generation/render operation:
- * Checks if user is logged in and has > 0 credits.
- * If yes, executes callback and decrements credit.
- * If no, shows auth modal or contact popup.
+ * Checks if user is logged in and has >= 2 tokens (2 tokens per video).
+ * If yes, executes callback and decrements 2 tokens.
+ * If no, shows auth modal or recharge tokens modal.
  */
 async function guardCreditAction(actionCallback) {
   // 1. Must be logged in: STRICT ENFORCEMENT - No song can be rendered without signing in!
   if (!currentUser) {
     pendingGuardedAction = actionCallback;
-    openAuthModal('signin', '🔒 Sign In Required: You must sign in or create an account to render your karaoke song! (🎁 You will get 3 Free Songs)');
+    openAuthModal('signin', '🔒 Sign In Required: You must sign in or create an account to render your karaoke video!');
     return false;
   }
 
-  // 2. Check credits
-  if (currentCredits <= 0) {
+  // 2. Check tokens: 2 tokens required per video render
+  const requiredTokens = SUPABASE_CONFIG.tokensPerVideo;
+  if (currentCredits < requiredTokens) {
     openOutOfCreditsModal();
     return false;
   }
 
-  // 3. User has credit: execute action
+  // 3. User has enough tokens: execute action and deduct 2 tokens
   try {
     const result = await actionCallback();
-    // Decrement 1 credit upon starting generation
-    await deductSongCredit();
+    await deductSongCredit(requiredTokens);
     return result;
   } catch (err) {
     throw err;
@@ -622,7 +707,64 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('form-auth-signup')?.addEventListener('submit', handleSignUp);
   document.getElementById('btn-logout')?.addEventListener('click', handleSignOut);
 
+  // Recharge Modal Listeners
   document.getElementById('btn-close-contact-modal')?.addEventListener('click', closeOutOfCreditsModal);
+
+  // Allow clicking on header credits pill to recharge tokens anytime
+  document.getElementById('credits-pill')?.addEventListener('click', () => {
+    openOutOfCreditsModal();
+  });
+
+  // Modal backdrop click to close
+  document.getElementById('credits-contact-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'credits-contact-modal') {
+      closeOutOfCreditsModal();
+    }
+  });
+
+  // Token Package Cards Selection
+  document.querySelectorAll('.token-pkg-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const tokens = parseInt(card.getAttribute('data-tokens'), 10);
+      if (tokens) selectTokens(tokens);
+    });
+  });
+
+  // Custom Token Stepper Controls (min 2 tokens, step 2)
+  document.getElementById('btn-token-minus')?.addEventListener('click', () => {
+    selectTokens(Math.max(SUPABASE_CONFIG.tokensPerVideo, selectedTokens - SUPABASE_CONFIG.tokensPerVideo));
+  });
+
+  document.getElementById('btn-token-plus')?.addEventListener('click', () => {
+    selectTokens(selectedTokens + SUPABASE_CONFIG.tokensPerVideo);
+  });
+
+  document.getElementById('token-quantity-input')?.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    if (!isNaN(val) && val >= 1) {
+      selectTokens(val);
+    }
+  });
+
+  // Copy UPI ID to Clipboard
+  document.getElementById('btn-copy-upi')?.addEventListener('click', () => {
+    const copyBtn = document.getElementById('btn-copy-upi');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(SUPABASE_CONFIG.upiId).then(() => {
+        if (copyBtn) {
+          const oldText = copyBtn.textContent;
+          copyBtn.textContent = '✓ Copied!';
+          setTimeout(() => { copyBtn.textContent = oldText; }, 2000);
+        }
+      }).catch(() => {
+        prompt('Copy UPI ID:', SUPABASE_CONFIG.upiId);
+      });
+    } else {
+      prompt('Copy UPI ID:', SUPABASE_CONFIG.upiId);
+    }
+  });
+
+  // Copy User Email
   document.getElementById('btn-copy-user-email')?.addEventListener('click', () => {
     if (currentUser?.email) {
       navigator.clipboard.writeText(currentUser.email);
@@ -641,6 +783,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     deductSongCredit,
     openAuthModal,
     openOutOfCreditsModal,
+    selectTokens,
     syncAuthGateState,
     getCurrentUser: () => currentUser,
     getCredits: () => currentCredits,
