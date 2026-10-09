@@ -1,22 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Karoke Maker | by Armaan Karaoke</title>
-  <meta name="description" content="Generate 5-section anti-overlap duet karaoke videos with word-level sweeps from audio and synchronized lyrics. Ultra-lite, runs smoothly on 4GB RAM laptops.">
+  <meta name="description"
+    content="Generate 5-section anti-overlap duet karaoke videos with word-level sweeps from audio and synchronized lyrics. Ultra-lite, runs smoothly on 4GB RAM laptops.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="app-container">
     <!-- Top Navigation / Header -->
     <header class="app-header">
       <div class="brand">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18V5l12-2v13"></path>
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
@@ -40,7 +46,7 @@
     <main class="workspace-grid">
       <!-- Left Column: Controls, Upload, Lyrics Editor -->
       <section class="panel editor-panel">
-        
+
         <!-- Step 1: Audio Source -->
         <div class="panel-section">
           <div class="section-title-row">
@@ -51,6 +57,18 @@
 
           <!-- 1-Click Auto-Pilot Duet Hero Studio -->
           <div class="autopilot-hero-card" id="autopilot-hero-card">
+            <div class="autopilot-badge-row">
+              <span class="autopilot-badge">✨ 1-CLICK FULL AUTO-PILOT</span>
+              <button type="button" class="yt-toggle-key-btn" id="btn-toggle-yt-key" title="Configure Gemini AI Key">
+                <span>🔑 AI Key (Optional)</span>
+              </button>
+            </div>
+
+            <p class="autopilot-desc">
+              Provide any song (Upload MP3/WAV or paste YouTube link) — AI automatically detects singing language,
+              separates Male [1] vs. Female [2] vs. Duet [3] vocals, aligns timestamps, and encodes the complete 1080p
+              Video in one continuous go!
+            </p>
 
             <!-- Dual Source Tabs -->
             <div class="autopilot-source-tabs">
@@ -87,10 +105,8 @@
             <!-- Pane B: YouTube Link Input -->
             <div class="source-pane" id="pane-src-yt">
               <div class="yt-input-group">
-                <input type="text" id="yt-url-input" class="yt-input" placeholder="Paste YouTube Link (e.g. https://youtu.be/...)" autocomplete="off">
-                <button type="button" class="yt-toggle-key-btn" id="btn-toggle-yt-key" title="Configure Gemini AI Key (Optional)">
-                  <span>🔑 AI Key</span>
-                </button>
+                <input type="text" id="yt-url-input" class="yt-input"
+                  placeholder="Paste YouTube Link (e.g. https://youtu.be/...)" autocomplete="off">
               </div>
             </div>
 
@@ -99,10 +115,13 @@
               <div class="yt-key-inner">
                 <div class="yt-key-label-row">
                   <span>Gemini API Key (for Voice & Language AI):</span>
-                  <a href="https://aistudio.google.com/app/apikey" target="_blank" class="yt-key-link">Get Free Key ↗</a>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" class="yt-key-link">Get Free Key
+                    ↗</a>
                 </div>
-                <input type="password" id="yt-api-key" class="yt-key-input" placeholder="AIzaSy... (Saved in your browser)">
-                <span class="yt-key-hint">Without an API key, it uses synced lyrics databases or captions as fallback.</span>
+                <input type="password" id="yt-api-key" class="yt-key-input"
+                  placeholder="AIzaSy... (Saved in your browser)">
+                <span class="yt-key-hint">Without an API key, it uses synced lyrics databases or captions as
+                  fallback.</span>
               </div>
             </div>
 
@@ -156,8 +175,14 @@
           <!-- Audio Player & Scrubber Bar -->
           <div class="audio-player-bar" id="audio-player-bar">
             <button class="player-btn play-pause-btn" id="btn-play-pause" title="Play/Pause (Spacebar)">
-              <svg id="play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
-              <svg id="pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              <svg id="play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+              <svg id="pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"
+                style="display: none;">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
             </button>
             <div class="time-display" id="time-display">00:00.00 / 00:00.00</div>
             <div class="scrubber-container">
@@ -265,8 +290,9 @@
           <!-- Tab 2: Interactive Tap-to-Sync -->
           <div class="tab-pane" id="pane-tap-sync">
             <div class="tap-sync-helper">
-              <p>Don't have timestamps? Play the song and tap <strong>"Mark Line"</strong> or press <strong>Spacebar</strong> to automatically set the exact timings line-by-line!</p>
-              
+              <p>Don't have timestamps? Play the song and tap <strong>"Mark Line"</strong> or press
+                <strong>Spacebar</strong> to automatically set the exact timings line-by-line!</p>
+
               <div class="tap-sync-action-bar">
                 <button class="btn btn-primary" id="btn-tap-sync-action">
                   <span>⏱️ Mark Current Line</span>
@@ -275,7 +301,8 @@
               </div>
 
               <div class="tap-sync-lines-list" id="tap-sync-lines-list">
-                <p class="placeholder-text">Enter raw lyrics in the Text Editor first, then switch here to tap-sync them.</p>
+                <p class="placeholder-text">Enter raw lyrics in the Text Editor first, then switch here to tap-sync
+                  them.</p>
               </div>
             </div>
           </div>
@@ -286,7 +313,7 @@
 
       <!-- Right Column: Live 1920x1080 Real-Time Canvas Preview & Export -->
       <section class="panel preview-panel">
-        
+
         <div class="preview-header">
           <div class="preview-title-box">
             <h2>Real-Time Live Canvas Preview</h2>
@@ -331,7 +358,8 @@
             <div class="export-card primary-export">
               <div class="export-card-info">
                 <h4>🎬 Render Video Live (Plays Whole Song On Screen)</h4>
-                <p>Plays the entire video live on the 1080p canvas with duet sweeps and anti-overlap slots. Once playback finishes, it provides your download button and player!</p>
+                <p>Plays the entire video live on the 1080p canvas with duet sweeps and anti-overlap slots. Once
+                  playback finishes, it provides your download button and player!</p>
                 <div class="compatibility-tags">
                   <span class="compat-tag">👁️ Plays & Renders Live</span>
                   <span class="compat-tag">📱 Universal (iPhone, Android, Tab, PC, TV)</span>
@@ -339,7 +367,9 @@
                 </div>
               </div>
               <button class="btn btn-primary btn-lg" id="btn-render-live">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
                 <span>▶ Render Video Live</span>
               </button>
             </div>
@@ -355,8 +385,10 @@
               <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
             </div>
             <div class="progress-footer">
-              <span class="render-eta" id="render-eta">Playing canvas sweeps live. Download button will appear on completion.</span>
-              <button class="btn btn-secondary btn-sm" id="btn-cancel-render">⏹ Finish & Get Download Button Now</button>
+              <span class="render-eta" id="render-eta">Playing canvas sweeps live. Download button will appear on
+                completion.</span>
+              <button class="btn btn-secondary btn-sm" id="btn-cancel-render">⏹ Finish & Get Download Button
+                Now</button>
             </div>
           </div>
 
@@ -370,15 +402,22 @@
                   <p id="download-filename-sub">Click below to download your 1080p Duet Karaoke video file.</p>
                 </div>
               </div>
-              <a href="#" class="btn btn-primary btn-lg pulse-glow" id="btn-download-video" download="duet_karaoke_1080p.mp4">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <a href="#" class="btn btn-primary btn-lg pulse-glow" id="btn-download-video"
+                download="duet_karaoke_1080p.mp4">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
                 <span>⬇ Download Video (.MP4)</span>
               </a>
             </div>
 
             <!-- In-browser preview of the rendered video -->
             <div class="rendered-video-wrapper" id="rendered-video-wrapper" style="display: none;">
-              <div class="preview-player-title" style="font-size: 0.8rem; color: #a5f3fc; margin-bottom: 6px; font-weight: 600;">▶ Preview Rendered Video:</div>
+              <div class="preview-player-title"
+                style="font-size: 0.8rem; color: #a5f3fc; margin-bottom: 6px; font-weight: 600;">▶ Preview Rendered
+                Video:</div>
               <video id="rendered-video-player" controls playsinline></video>
             </div>
           </div>
@@ -397,7 +436,7 @@
         </div>
         <div class="modal-body">
           <p>The app automatically parses both bracket and comma timestamp formats, along with singer color tags:</p>
-          
+
           <div class="syntax-example-box">
             <h4>Format 1: Bracket Format (Recommended)</h4>
             <code>[1] [00:04.50 - 00:09.20] Singer 1 sings this phrase</code><br>
@@ -430,4 +469,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
