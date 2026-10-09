@@ -2638,40 +2638,37 @@ input[type="color"]::-webkit-color-swatch {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .gate-whatsapp-link {
-  font-size: 0.76rem;
-  color: #4ade80;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #25d366;
+  background: rgba(37, 211, 102, 0.1);
+  border: 1px solid rgba(37, 211, 102, 0.28);
+  padding: 8px 18px;
+  border-radius: 20px;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .gate-whatsapp-link:hover {
-  color: #86efac;
-  text-decoration: underline;
+  background: rgba(37, 211, 102, 0.2);
+  border-color: rgba(37, 211, 102, 0.5);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.28);
 }
 
-.gate-footer-divider {
-  width: 1px;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.gate-admin-link {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.gate-admin-link:hover {
-  color: #00f2fe;
+.gate-whatsapp-link svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 @media (max-width: 520px) {
@@ -2687,12 +2684,7 @@ input[type="color"]::-webkit-color-swatch {
     justify-content: flex-start;
   }
   .gate-card-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .gate-footer-divider {
-    display: none;
+    justify-content: center;
   }
 }
 
