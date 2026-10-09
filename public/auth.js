@@ -227,6 +227,7 @@ async function handleSignIn(e) {
     currentUser = data.user;
     await loadUserProfile(currentUser);
     closeAuthModal();
+    syncAuthGateState();
 
     if (pendingGuardedAction) {
       const pendingFn = pendingGuardedAction;
@@ -279,6 +280,7 @@ async function handleSignUp(e) {
       currentUser = data.user;
       await loadUserProfile(currentUser);
       closeAuthModal();
+      syncAuthGateState();
 
       if (pendingGuardedAction) {
         const pendingFn = pendingGuardedAction;
@@ -309,6 +311,7 @@ async function handleSignOut() {
   currentUser = null;
   currentCredits = 0;
   updateAuthUI();
+  syncAuthGateState();
 }
 
 function showAuthError(msg) {
@@ -316,6 +319,198 @@ function showAuthError(msg) {
   if (errEl) {
     errEl.textContent = msg;
     errEl.style.display = 'block';
+  }
+}
+
+function showGateError(msg) {
+  const errEl = document.getElementById('gate-auth-error');
+  if (errEl) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+}
+
+function showGateNotice(msg) {
+  const noticeEl = document.getElementById('gate-auth-notice');
+  if (noticeEl) {
+    noticeEl.textContent = msg;
+    noticeEl.style.display = 'block';
+  }
+}
+
+function setGateTab(tab) {
+  const tabSignIn = document.getElementById('gate-tab-signin');
+  const tabSignUp = document.getElementById('gate-tab-signup');
+  const formSignIn = document.getElementById('form-gate-signin');
+  const formSignUp = document.getElementById('form-gate-signup');
+  const errEl = document.getElementById('gate-auth-error');
+  const noticeEl = document.getElementById('gate-auth-notice');
+
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+  if (noticeEl) { noticeEl.textContent = ''; noticeEl.style.display = 'none'; }
+
+  if (tab === 'signup') {
+    tabSignUp?.classList.add('active');
+    tabSignIn?.classList.remove('active');
+    if (formSignUp) formSignUp.style.display = 'flex';
+    if (formSignIn) formSignIn.style.display = 'none';
+  } else {
+    tabSignIn?.classList.add('active');
+    tabSignUp?.classList.remove('active');
+    if (formSignIn) formSignIn.style.display = 'flex';
+    if (formSignUp) formSignUp.style.display = 'none';
+  }
+}
+
+/**
+ * Synchronize Authentication Gate Screen with Application Visibility:
+ * - If user is NOT signed in: display full-page login gate, hide actual app container
+ * - If user IS signed in: hide login gate with smooth animation, reveal actual studio
+ */
+function syncAuthGateState() {
+  const gate = document.getElementById('auth-gate-screen');
+  const appContainer = document.getElementById('app-container');
+  const loader = document.getElementById('auth-gate-loader');
+
+  // Dismiss initial session loader with smooth fade-out
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      loader.style.display = 'none';
+    }, 250);
+  }
+
+  if (currentUser) {
+    // Authenticated: Jump into actual app
+    if (gate) {
+      gate.classList.add('fade-out');
+      setTimeout(() => {
+        if (currentUser) {
+          gate.style.display = 'none';
+          gate.classList.remove('fade-out');
+        }
+      }, 300);
+    }
+    if (appContainer) {
+      appContainer.style.display = 'flex';
+      requestAnimationFrame(() => {
+        appContainer.classList.add('app-visible');
+      });
+      // Ensure canvas is crisply rendered
+      if (typeof renderCanvasFrame === 'function') {
+        try { renderCanvasFrame(0); } catch (_) {}
+      }
+    }
+  } else {
+    // Unauthenticated: Lock app container, show login portal
+    if (appContainer) {
+      appContainer.classList.remove('app-visible');
+      appContainer.style.display = 'none';
+    }
+    if (gate) {
+      gate.style.display = 'flex';
+      gate.classList.remove('fade-out');
+    }
+  }
+}
+
+async function handleGateSignIn(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById('btn-gate-signin-submit');
+  const email = document.getElementById('gate-signin-email')?.value.trim();
+  const password = document.getElementById('gate-signin-password')?.value;
+  const errEl = document.getElementById('gate-auth-error');
+  const noticeEl = document.getElementById('gate-auth-notice');
+
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+  if (noticeEl) { noticeEl.textContent = ''; noticeEl.style.display = 'none'; }
+
+  if (!email || !password) {
+    showGateError('Please enter both email and password.');
+    return;
+  }
+
+  if (!supabaseClient) {
+    showGateError('Database connection error. Please refresh the page.');
+    return;
+  }
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn-spinner"></span><span>Signing In...</span>';
+    }
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    currentUser = data.user;
+    await loadUserProfile(currentUser);
+    syncAuthGateState();
+  } catch (err) {
+    showGateError(err.message || 'Failed to sign in. Please verify your email & password.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Sign In to Studio</span><span class="btn-arrow">→</span>';
+    }
+  }
+}
+
+async function handleGateSignUp(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById('btn-gate-signup-submit');
+  const email = document.getElementById('gate-signup-email')?.value.trim();
+  const password = document.getElementById('gate-signup-password')?.value;
+  const confirm = document.getElementById('gate-signup-confirm')?.value;
+  const errEl = document.getElementById('gate-auth-error');
+  const noticeEl = document.getElementById('gate-auth-notice');
+
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+  if (noticeEl) { noticeEl.textContent = ''; noticeEl.style.display = 'none'; }
+
+  if (!email || !password) {
+    showGateError('Please fill out all fields.');
+    return;
+  }
+  if (password.length < 6) {
+    showGateError('Password must be at least 6 characters long.');
+    return;
+  }
+  if (password !== confirm) {
+    showGateError('Passwords do not match. Please verify your confirm password.');
+    return;
+  }
+
+  if (!supabaseClient) {
+    showGateError('Database connection error. Please refresh the page.');
+    return;
+  }
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn-spinner"></span><span>Creating Account...</span>';
+    }
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) throw error;
+
+    if (data.user && data.session) {
+      currentUser = data.user;
+      await loadUserProfile(currentUser);
+      syncAuthGateState();
+    } else {
+      showGateNotice('🎉 Account created! If confirmation is required, please check your email, then Sign In.');
+      setGateTab('signin');
+      const signInEmail = document.getElementById('gate-signin-email');
+      if (signInEmail) signInEmail.value = email;
+    }
+  } catch (err) {
+    showGateError(err.message || 'Failed to create account.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Claim 3 Free Songs & Create Account</span><span class="btn-arrow">→</span>';
+    }
   }
 }
 
@@ -374,23 +569,51 @@ window.addEventListener('DOMContentLoaded', async () => {
         currentUser = session.user;
         await loadUserProfile(currentUser);
       }
+      syncAuthGateState();
 
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
           currentUser = session.user;
           await loadUserProfile(currentUser);
+          syncAuthGateState();
         } else {
           currentUser = null;
           currentCredits = 0;
           updateAuthUI();
+          syncAuthGateState();
         }
       });
     } catch (err) {
       console.warn('[Auth] Session check failed:', err);
+      syncAuthGateState();
     }
+  } else {
+    syncAuthGateState();
   }
 
-  // Event Listeners
+  // Gate Form & Tab Listeners
+  document.getElementById('gate-tab-signin')?.addEventListener('click', () => setGateTab('signin'));
+  document.getElementById('gate-tab-signup')?.addEventListener('click', () => setGateTab('signup'));
+  document.getElementById('form-gate-signin')?.addEventListener('submit', handleGateSignIn);
+  document.getElementById('form-gate-signup')?.addEventListener('submit', handleGateSignUp);
+
+  // Toggle Password Visibility
+  document.querySelectorAll('.btn-toggle-pwd').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    });
+  });
+
+  // Modal Event Listeners
   document.getElementById('btn-open-auth')?.addEventListener('click', () => openAuthModal('signin'));
   document.getElementById('btn-close-auth-modal')?.addEventListener('click', closeAuthModal);
   document.getElementById('tab-auth-signin')?.addEventListener('click', () => setAuthTab('signin'));
@@ -418,6 +641,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     deductSongCredit,
     openAuthModal,
     openOutOfCreditsModal,
+    syncAuthGateState,
     getCurrentUser: () => currentUser,
     getCredits: () => currentCredits,
     setAnonKey: (key) => {
@@ -427,3 +651,4 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   };
 });
+

@@ -19,7 +19,149 @@
 </head>
 
 <body>
-  <div class="app-container">
+  <!-- Initial Session Verification Loader -->
+  <div id="auth-gate-loader" class="auth-gate-loader">
+    <div class="gate-spinner-glow">
+      <div class="gate-spinner"></div>
+    </div>
+    <div class="gate-loader-brand">
+      <span class="gate-loader-icon">🎤</span>
+      <span class="gate-loader-title">Karoke Maker</span>
+    </div>
+    <p class="gate-loading-text">Connecting to Duet Karaoke Studio...</p>
+  </div>
+
+  <!-- FULL-PAGE AUTHENTICATION GATE / LOGIN PORTAL SCREEN -->
+  <div id="auth-gate-screen" class="auth-gate-screen" style="display: none;">
+    <div class="auth-gate-backdrop-grid"></div>
+    <div class="auth-gate-glow-orb glow-1"></div>
+    <div class="auth-gate-glow-orb glow-2"></div>
+
+    <div class="auth-gate-card">
+      <div class="auth-gate-brand">
+        <div class="gate-brand-icon">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+        </div>
+        <div class="gate-brand-info">
+          <h2>Karoke Maker</h2>
+          <span class="gate-brand-badge">by Armaan Karaoke</span>
+        </div>
+      </div>
+
+      <div class="gate-hero-text">
+        <h3>Sign In to Studio</h3>
+        <p>Access the 5-Section Anti-Overlap Duet Karaoke Maker with word-level sweeps</p>
+      </div>
+
+      <!-- Value Proposition Perks -->
+      <div class="gate-perks-row">
+        <div class="gate-perk-pill">
+          <span class="perk-icon">🎁</span>
+          <span>3 Free Songs</span>
+        </div>
+        <div class="gate-perk-pill">
+          <span class="perk-icon">⚡</span>
+          <span>Anti-Overlap</span>
+        </div>
+        <div class="gate-perk-pill">
+          <span class="perk-icon">🎙️</span>
+          <span>Vocal Remover</span>
+        </div>
+      </div>
+
+      <!-- Segmented Tabs -->
+      <div class="gate-tabs">
+        <button type="button" class="gate-tab active" id="gate-tab-signin">
+          <span>Sign In</span>
+        </button>
+        <button type="button" class="gate-tab" id="gate-tab-signup">
+          <span>Create Account</span>
+          <span class="gate-tab-free-tag">3 Free</span>
+        </button>
+      </div>
+
+      <!-- Dynamic Alerts -->
+      <div class="auth-notice-banner" id="gate-auth-notice" style="display: none;"></div>
+      <div class="auth-error-banner" id="gate-auth-error" style="display: none;"></div>
+
+      <!-- Form 1: Sign In -->
+      <form id="form-gate-signin" class="gate-form">
+        <div class="gate-field">
+          <label for="gate-signin-email">Email Address</label>
+          <div class="gate-input-wrap">
+            <span class="gate-input-icon">✉️</span>
+            <input type="email" id="gate-signin-email" class="gate-input" placeholder="you@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="gate-field">
+          <label for="gate-signin-password">Password</label>
+          <div class="gate-input-wrap">
+            <span class="gate-input-icon">🔒</span>
+            <input type="password" id="gate-signin-password" class="gate-input" placeholder="Enter your password" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-pwd" data-target="gate-signin-password" title="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-gate-submit" id="btn-gate-signin-submit">
+          <span>Sign In to Studio</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </form>
+
+      <!-- Form 2: Sign Up -->
+      <form id="form-gate-signup" class="gate-form" style="display: none;">
+        <div class="gate-field">
+          <label for="gate-signup-email">Email Address</label>
+          <div class="gate-input-wrap">
+            <span class="gate-input-icon">✉️</span>
+            <input type="email" id="gate-signup-email" class="gate-input" placeholder="you@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="gate-field">
+          <label for="gate-signup-password">Password (Minimum 6 Characters)</label>
+          <div class="gate-input-wrap">
+            <span class="gate-input-icon">🔒</span>
+            <input type="password" id="gate-signup-password" class="gate-input" placeholder="Create strong password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" data-target="gate-signup-password" title="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <div class="gate-field">
+          <label for="gate-signup-confirm">Confirm Password</label>
+          <div class="gate-input-wrap">
+            <span class="gate-input-icon">🛡️</span>
+            <input type="password" id="gate-signup-confirm" class="gate-input" placeholder="Repeat your password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" data-target="gate-signup-confirm" title="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-gate-submit accent" id="btn-gate-signup-submit">
+          <span>Claim 3 Free Songs & Create Account</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </form>
+
+      <!-- Footer Support & Admin Link -->
+      <div class="gate-card-footer">
+        <a href="https://wa.me/919663396058" target="_blank" class="gate-whatsapp-link">
+          <span>💬 Need Help? WhatsApp: +91 96633 96058</span>
+        </a>
+        <div class="gate-footer-divider"></div>
+        <a href="/admin" class="gate-admin-link">
+          <span>🛡️ Admin Portal</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="app-container" style="display: none;">
     <!-- Top Navigation / Header -->
     <header class="app-header">
       <div class="brand">
@@ -53,7 +195,10 @@
               <span class="credits-label">Songs Left</span>
             </div>
             <span class="user-email-text" id="user-email-display">user@example.com</span>
-            <button type="button" class="btn-logout" id="btn-logout" title="Sign Out">✕</button>
+            <button type="button" class="btn-logout" id="btn-logout" title="Sign Out">
+              <span class="logout-icon">🚪</span>
+              <span>Log Out</span>
+            </button>
           </div>
         </div>
 
