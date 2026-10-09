@@ -100,6 +100,7 @@ body {
   letter-spacing: -0.02em;
   background: linear-gradient(120deg, #ffffff 30%, #9ec5fe 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -618,6 +619,7 @@ body {
 
 input[type="color"] {
   -webkit-appearance: none;
+  appearance: none;
   border: none;
   width: 30px;
   height: 30px;
