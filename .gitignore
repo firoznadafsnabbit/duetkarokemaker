@@ -21,3 +21,5 @@ node_modules/
 .npm
 .next/
 .env*.local
+
+.vercel
