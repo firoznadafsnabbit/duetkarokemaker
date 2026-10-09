@@ -342,15 +342,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const errEl = document.getElementById('gate-error');
     const submitBtn = document.getElementById('btn-email-submit');
 
-    // 1. Strict admin verification: Only designated administrator allowed!
-    if (email !== ADMIN_CONFIG.masterAdminEmail.toLowerCase()) {
-      errEl.textContent = `❌ Access Denied: Only designated admin (${ADMIN_CONFIG.masterAdminEmail}) is authorized.`;
-      errEl.style.display = 'block';
-      return;
-    }
-
-    if (password !== ADMIN_CONFIG.masterAdminPassword) {
-      errEl.textContent = '❌ Incorrect password. Access denied.';
+    // 1. Strict admin verification: Never leak the admin email to unauthorized viewers!
+    if (email !== ADMIN_CONFIG.masterAdminEmail.toLowerCase() || password !== ADMIN_CONFIG.masterAdminPassword) {
+      errEl.textContent = '❌ Invalid admin credentials. Access denied.';
       errEl.style.display = 'block';
       return;
     }
