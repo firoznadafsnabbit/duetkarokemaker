@@ -509,7 +509,7 @@ async function handleGateSignUp(e) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>Claim 3 Free Songs & Create Account</span><span class="btn-arrow">→</span>';
+      submitBtn.innerHTML = '<span>Create Account</span><span class="btn-arrow">→</span>';
     }
   }
 }
