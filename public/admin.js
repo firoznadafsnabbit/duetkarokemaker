@@ -154,14 +154,14 @@ function renderUsersTable() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="table-empty">
+        <td colspan="6" class="table-empty">
           ${allUsers.length === 0 ? 'No registered users found yet.' : 'No users match your search/filter.'}
         </td>
       </tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(u => {
+  tbody.innerHTML = filtered.map((u, idx) => {
     const credits = u.credits ?? 0;
     let badgeClass = 'good';
     if (credits <= 0) badgeClass = 'zero';
@@ -169,31 +169,65 @@ function renderUsersTable() {
 
     const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'Recent';
     const email = escapeHtml(u.email || 'No email');
+    const rowId = `user-row-${idx}`;
 
     return `
       <tr data-user-id="${u.id}" data-email="${email}">
         <td>
           <div class="user-email-cell">
-            <span>${email}</span>
+            <span class="user-email-text-full">${email}</span>
             <button type="button" class="btn-copy-mini" onclick="copyText('${email}')" title="Copy Email">📋</button>
             ${credits <= 0 ? `<a href="https://wa.me/${ADMIN_CONFIG.whatsappNumber}?text=Hi+${encodeURIComponent(email)}+your+credits+are+ready" target="_blank" class="btn-copy-mini" title="Send WhatsApp Message">💬</a>` : ''}
           </div>
         </td>
         <td>
-          <span class="credit-badge ${badgeClass}">
-            ⚡ ${credits} ${credits === 1 ? 'Song' : 'Songs'}
-          </span>
-        </td>
-        <td style="color: var(--text-muted); font-size: 0.85rem;">
-          ${dateStr}
+          <div class="remaining-credits-cell">
+            <span class="credit-badge ${badgeClass}" id="badge-rem-${rowId}">
+              ⚡ ${credits} ${credits === 1 ? 'Song' : 'Songs'}
+            </span>
+            <span class="sub-label">Remaining</span>
+          </div>
         </td>
         <td>
-          <div class="actions-cell">
-            <button type="button" class="btn-quick-add btn-add-5" onclick="quickAddCredits('${u.id}', '${email}', ${credits}, 5)">+5</button>
-            <button type="button" class="btn-quick-add btn-add-10" onclick="quickAddCredits('${u.id}', '${email}', ${credits}, 10)">+10</button>
-            <button type="button" class="btn-quick-add btn-add-25" onclick="quickAddCredits('${u.id}', '${email}', ${credits}, 25)">+25</button>
-            <button type="button" class="btn-quick-add btn-custom-edit" onclick="promptCustomCredits('${u.id}', '${email}', ${credits})">✏️ Custom</button>
+          <div class="adding-credits-cell">
+            <div class="adding-controls-row">
+              <div class="adding-input-wrap">
+                <span class="adding-plus">+</span>
+                <input type="number" 
+                       id="add-input-${rowId}" 
+                       class="row-add-input" 
+                       value="10" 
+                       min="1" 
+                       max="1000" 
+                       oninput="onRowAmountChange('${rowId}', ${credits})"
+                       onkeydown="onRowInputKey(event, '${u.id}', '${email}', '${rowId}', ${credits})"
+                       title="Credits to add">
+                <span class="adding-unit">Songs</span>
+              </div>
+              <div class="row-preset-chips">
+                <button type="button" class="btn-preset-chip" onclick="setRowPreset('${rowId}', ${credits}, 5)">+5</button>
+                <button type="button" class="btn-preset-chip active" onclick="setRowPreset('${rowId}', ${credits}, 10)">+10</button>
+                <button type="button" class="btn-preset-chip" onclick="setRowPreset('${rowId}', ${credits}, 25)">+25</button>
+                <button type="button" class="btn-preset-chip" onclick="setRowPreset('${rowId}', ${credits}, 50)">+50</button>
+              </div>
+            </div>
+            <div class="row-calc-preview" id="row-calc-${rowId}">
+              <span class="calc-arrow">➔</span> Total after approval: <strong class="text-success">${credits + 10} Songs</strong>
+            </div>
           </div>
+        </td>
+        <td>
+          <div class="approve-action-cell">
+            <button type="button" 
+                    class="btn-approve-row" 
+                    id="btn-approve-${rowId}" 
+                    onclick="approveRowCredits('${u.id}', '${email}', '${rowId}', ${credits})">
+              ✓ Approve (<span id="btn-amt-${rowId}">+10</span>)
+            </button>
+          </div>
+        </td>
+        <td style="color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">
+          ${dateStr}
         </td>
         <td>
           <button type="button" class="btn-reset-zero" onclick="quickSetCredits('${u.id}', '${email}', 0)" title="Reset credits to 0">Reset (0)</button>
@@ -301,6 +335,90 @@ function closeApprovalModal() {
   if (modal) modal.style.display = 'none';
   pendingApproval = null;
 }
+
+// ==========================================
+// INLINE ROW CREDIT & APPROVAL ACTIONS
+// ==========================================
+
+// Set preset amount (+5, +10, +25, +50) for a specific row
+window.setRowPreset = function(rowId, currentCredits, amount) {
+  const input = document.getElementById(`add-input-${rowId}`);
+  if (input) {
+    input.value = amount;
+    window.onRowAmountChange(rowId, currentCredits);
+  }
+};
+
+// Live change listener when admin edits the adding credit input in a table row
+window.onRowAmountChange = function(rowId, currentCredits) {
+  const input = document.getElementById(`add-input-${rowId}`);
+  const calcEl = document.getElementById(`row-calc-${rowId}`);
+  const btnAmt = document.getElementById(`btn-amt-${rowId}`);
+  if (!input) return;
+
+  const raw = parseInt(input.value, 10);
+  const safeAdded = isNaN(raw) || raw < 0 ? 0 : raw;
+  const newTotal = (currentCredits || 0) + safeAdded;
+
+  if (calcEl) {
+    calcEl.innerHTML = `<span class="calc-arrow">➔</span> Total after approval: <strong class="text-success">${newTotal} Songs</strong>`;
+  }
+  if (btnAmt) {
+    btnAmt.textContent = `+${safeAdded}`;
+  }
+
+  // Update active chip state for this row
+  const row = input.closest('tr');
+  if (row) {
+    row.querySelectorAll('.btn-preset-chip').forEach(btn => {
+      const val = parseInt(btn.textContent.replace('+', ''), 10);
+      btn.classList.toggle('active', val === safeAdded);
+    });
+  }
+};
+
+// Allow pressing Enter key directly in the number input to trigger Approval
+window.onRowInputKey = function(event, userId, email, rowId, currentCredits) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    window.approveRowCredits(userId, email, rowId, currentCredits);
+  }
+};
+
+// Directly approve and credit the user from the table row
+window.approveRowCredits = async function(userId, email, rowId, currentCredits) {
+  const input = document.getElementById(`add-input-${rowId}`);
+  const btn = document.getElementById(`btn-approve-${rowId}`);
+  const raw = input ? parseInt(input.value, 10) : 10;
+  const added = isNaN(raw) || raw <= 0 ? 0 : raw;
+
+  if (added <= 0) {
+    showToast('Please specify a positive number of credits to add.', 'warning');
+    if (input) input.focus();
+    return;
+  }
+
+  const remaining = currentCredits || 0;
+  const newTotal = remaining + added;
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Approving...';
+  }
+
+  try {
+    await setCredits(userId, email, newTotal);
+  } catch (err) {
+    console.error('Row approval error:', err);
+    showToast(`Approval failed: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      const btnAmt = document.getElementById(`btn-amt-${rowId}`);
+      if (btnAmt) btnAmt.textContent = `+${added}`;
+    }
+  }
+};
 
 // Quick Add Helper: Requests Approval first!
 window.quickAddCredits = function(userId, email, current, amount) {
