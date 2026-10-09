@@ -1906,6 +1906,31 @@ input[type="color"]::-webkit-color-swatch {
   color: #ffffff;
 }
 
+.btn-admin-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-admin-nav:hover {
+  background: rgba(0, 242, 254, 0.12);
+  border-color: rgba(0, 242, 254, 0.35);
+  color: var(--brand-cyan);
+}
+
+.admin-nav-icon {
+  font-size: 0.85rem;
+}
+
 /* Modals Customization */
 .auth-modal-box {
   max-width: 440px !important;

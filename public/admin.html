@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Duet Karaoke Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <div class="admin-app">
+    <!-- Top Admin Bar -->
+    <header class="admin-header">
+      <div class="admin-brand">
+        <a href="index.html" class="btn-back-home" title="Back to Duet Karaoke Maker">
+          ← Back to App
+        </a>
+        <div class="admin-title-wrap">
+          <h1>🛡️ Admin Dashboard</h1>
+          <span class="admin-badge">Karaoke Maker Control</span>
+        </div>
+      </div>
+
+      <div class="admin-header-actions" id="admin-header-actions" style="display: none;">
+        <span class="admin-auth-tag" id="admin-auth-tag">🔒 Admin Mode</span>
+        <button type="button" class="btn-refresh" id="btn-refresh-data" title="Refresh User Data">
+          🔄 Refresh
+        </button>
+        <button type="button" class="btn-admin-lock" id="btn-admin-lock" title="Lock Admin Panel">
+          🔒 Lock
+        </button>
+      </div>
+    </header>
+
+    <!-- ADMIN AUTH GATE (PIN & Email Login) -->
+    <div class="admin-gate-overlay" id="admin-gate-overlay">
+      <div class="admin-gate-box">
+        <div class="gate-icon">🔐</div>
+        <h2>Owner Admin Access</h2>
+        <p class="gate-sub">Enter your secret Admin PIN or sign in with your admin credentials to access user management.</p>
+
+        <!-- Tab Switcher -->
+        <div class="gate-tabs">
+          <button type="button" class="gate-tab active" id="tab-pin">Secret PIN</button>
+          <button type="button" class="gate-tab" id="tab-email">Admin Login</button>
+        </div>
+
+        <!-- PIN FORM -->
+        <form id="form-admin-pin" class="gate-form">
+          <div class="input-group">
+            <label for="admin-pin-input">Admin Passcode / PIN</label>
+            <input type="password" id="admin-pin-input" placeholder="Enter PIN (Default: 9663)" autocomplete="current-password" autofocus required>
+          </div>
+          <button type="submit" class="btn-gate-submit" id="btn-pin-submit">Unlock Dashboard →</button>
+          <div class="gate-hint">💡 Default PIN is <code>9663</code> (Change anytime in dashboard)</div>
+        </form>
+
+        <!-- EMAIL LOGIN FORM -->
+        <form id="form-admin-email" class="gate-form" style="display: none;">
+          <div class="input-group">
+            <label for="admin-email-input">Admin Email</label>
+            <input type="email" id="admin-email-input" placeholder="owner@example.com" required>
+          </div>
+          <div class="input-group">
+            <label for="admin-password-input">Password</label>
+            <input type="password" id="admin-password-input" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn-gate-submit" id="btn-email-submit">Sign In as Admin →</button>
+        </form>
+
+        <div id="gate-error" class="gate-error" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- MAIN ADMIN CONTENT (Hidden until unlocked) -->
+    <main class="admin-main" id="admin-main" style="display: none;">
+
+      <!-- STATS METRIC CARDS -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon icon-users">👥</div>
+          <div class="stat-info">
+            <span class="stat-label">Total Users</span>
+            <span class="stat-value" id="stat-total-users">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-zero">🚨</div>
+          <div class="stat-info">
+            <span class="stat-label">0 Credits (Needs Top-up)</span>
+            <span class="stat-value text-danger" id="stat-zero-credits">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-credits">⚡</div>
+          <div class="stat-info">
+            <span class="stat-label">Active Credits in System</span>
+            <span class="stat-value text-accent" id="stat-total-credits">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-paying">💎</div>
+          <div class="stat-info">
+            <span class="stat-label">Users With Credits</span>
+            <span class="stat-value text-success" id="stat-active-users">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUICK TOP-UP BY EMAIL BANNER -->
+      <section class="quick-topup-section">
+        <div class="quick-topup-card">
+          <div class="topup-header">
+            <h3>⚡ Quick Credit Grant</h3>
+            <p>Add credits directly to any customer when they pay you on WhatsApp.</p>
+          </div>
+          <form id="form-direct-topup" class="topup-form">
+            <div class="form-row">
+              <input type="email" id="direct-email-input" placeholder="Customer's Email (e.g. user@gmail.com)" required>
+              <div class="amount-presets">
+                <button type="button" class="btn-preset" data-amount="5">+5</button>
+                <button type="button" class="btn-preset active" data-amount="10">+10</button>
+                <button type="button" class="btn-preset" data-amount="20">+20</button>
+                <button type="button" class="btn-preset" data-amount="50">+50</button>
+              </div>
+              <input type="number" id="direct-amount-input" min="1" max="1000" value="10" title="Custom Amount">
+              <button type="submit" class="btn-grant-credits" id="btn-grant-submit">Grant Credits</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- USERS SEARCH & CONTROLS -->
+      <section class="users-section">
+        <div class="section-toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="user-search-input" placeholder="Search users by email...">
+            <button type="button" id="btn-clear-search" class="btn-clear-search" style="display: none;">✕</button>
+          </div>
+
+          <div class="filter-chips">
+            <button type="button" class="filter-chip active" data-filter="all">All Users (<span id="count-filter-all">0</span>)</button>
+            <button type="button" class="filter-chip text-danger" data-filter="zero">0 Credits (<span id="count-filter-zero">0</span>)</button>
+            <button type="button" class="filter-chip text-success" data-filter="active">Has Credits (<span id="count-filter-active">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- USERS TABLE -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>User Email</th>
+                <th>Current Credits</th>
+                <th>Joined Date</th>
+                <th>Quick Add Credits</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr>
+                <td colspan="5" class="table-loading">Loading users from Supabase...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ADMIN SETTINGS & PIN MODIFICATION -->
+      <section class="admin-footer-settings">
+        <div class="settings-card">
+          <h4>⚙️ Admin Security Settings</h4>
+          <div class="settings-row">
+            <span>Change Secret Admin PIN:</span>
+            <input type="password" id="input-new-pin" placeholder="New PIN (min 4 chars)">
+            <button type="button" class="btn-small" id="btn-update-pin">Update PIN</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="admin-toast" class="admin-toast"></div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+
+</html>
