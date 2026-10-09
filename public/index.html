@@ -13,6 +13,9 @@
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- 100% Free Supabase Client & Auth SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
 </head>
 
 <body>
@@ -35,6 +38,25 @@
       </div>
 
       <div class="header-status">
+        <!-- User Login & Credit Bar -->
+        <div class="user-auth-bar" id="user-auth-bar">
+          <button type="button" class="btn-auth-trigger" id="btn-open-auth">
+            <span class="auth-btn-icon">🔑</span>
+            <span>Sign In</span>
+            <span class="badge-free-trial">🎁 3 Free Songs</span>
+          </button>
+
+          <div class="user-profile-chip" id="user-profile-chip" style="display: none;">
+            <div class="credits-pill" id="credits-pill" title="Remaining song generations">
+              <span class="credits-icon">⚡</span>
+              <span class="credits-count" id="user-credits-val">3</span>
+              <span class="credits-label">Songs Left</span>
+            </div>
+            <span class="user-email-text" id="user-email-display">user@example.com</span>
+            <button type="button" class="btn-logout" id="btn-logout" title="Sign Out">✕</button>
+          </div>
+        </div>
+
         <div class="system-chip" id="system-chip" title="System Status">
           <span class="status-dot green"></span>
           <span class="chip-text" id="engine-status">Browser Engine Ready</span>
@@ -452,6 +474,107 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" id="btn-syntax-ok">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. User Authentication Modal (Supabase) -->
+    <div class="modal-overlay" id="auth-modal" style="display: none;">
+      <div class="modal-content auth-modal-box">
+        <div class="modal-header">
+          <div class="auth-modal-title-row">
+            <span class="auth-icon-badge">🎤</span>
+            <div>
+              <h3>Karoke Maker Account</h3>
+              <p class="auth-modal-subtitle">Sign in to unlock 3 Free 1080p Duet Karaoke videos</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-auth-modal" title="Close">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="auth-notice-banner" id="auth-modal-notice" style="display: none;"></div>
+          <div class="auth-error-banner" id="auth-modal-error" style="display: none;"></div>
+
+          <div class="auth-tabs">
+            <button type="button" class="auth-tab active" id="tab-auth-signin">Sign In</button>
+            <button type="button" class="auth-tab" id="tab-auth-signup">Create Account (3 Free)</button>
+          </div>
+
+          <!-- Sign In Form -->
+          <form id="form-auth-signin" class="auth-form">
+            <div class="form-group">
+              <label for="auth-signin-email">Email Address</label>
+              <input type="email" id="auth-signin-email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label for="auth-signin-password">Password</label>
+              <input type="password" id="auth-signin-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-auth-submit">Sign In</button>
+          </form>
+
+          <!-- Sign Up Form -->
+          <form id="form-auth-signup" class="auth-form" style="display: none;">
+            <div class="form-group">
+              <label for="auth-signup-email">Email Address</label>
+              <input type="email" id="auth-signup-email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label for="auth-signup-password">Password (min 6 chars)</label>
+              <input type="password" id="auth-signup-password" class="form-input" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label for="auth-signup-confirm">Confirm Password</label>
+              <input type="password" id="auth-signup-confirm" class="form-input" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn btn-accent btn-block btn-auth-submit">Create Account & Claim 3 Free Songs</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Out of Credits Contact / WhatsApp Popup -->
+    <div class="modal-overlay" id="credits-contact-modal" style="display: none;">
+      <div class="modal-content contact-modal-box">
+        <div class="modal-header">
+          <div class="contact-header-badge">
+            <span class="pulse-spark">⚠️</span>
+            <h3>Out of Free Song Credits</h3>
+          </div>
+          <button class="modal-close-btn" id="btn-close-contact-modal" title="Close">✕</button>
+        </div>
+
+        <div class="modal-body contact-modal-body">
+          <div class="contact-hero-art">
+            <span class="contact-hero-icon">💎</span>
+          </div>
+
+          <h4 class="contact-headline">You've Used All 3 Free Song Generations!</h4>
+          <p class="contact-subtext">
+            Want to render more high-definition duet karaoke videos? Contact Armaan directly to top up your account with more song credits.
+          </p>
+
+          <div class="contact-account-card">
+            <span class="account-card-label">Your Registered Account:</span>
+            <div class="account-card-row">
+              <span class="account-card-email" id="contact-user-email">loading...</span>
+              <button type="button" class="btn-copy-chip" id="btn-copy-user-email">📋 Copy Email</button>
+            </div>
+          </div>
+
+          <div class="contact-actions-grid">
+            <a href="https://wa.me/919663396058" target="_blank" class="btn-whatsapp-cta" id="btn-contact-whatsapp">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.997.545 1.765.801 2.796.801 3.184 0 5.768-2.587 5.769-5.766.001-3.182-2.583-5.768-5.769-5.768zm0 10.428c-.886 0-1.637-.253-2.348-.675l-.168-.1-1.577.414.421-1.537-.11-.176c-.464-.738-.709-1.474-.709-2.586 0-2.569 2.091-4.66 4.661-4.66 2.57 0 4.661 2.091 4.661 4.66 0 2.57-2.091 4.66-4.661 4.66zm6.815-11.458c-1.821-1.823-4.24-2.827-6.815-2.827-5.309 0-9.63 4.321-9.631 9.632 0 1.697.444 3.353 1.288 4.816l-1.368 4.996 5.115-1.342c1.409.768 2.999 1.173 4.624 1.173h.004c5.309 0 9.63-4.321 9.632-9.632.001-2.574-1.002-4.993-2.826-6.816z"/>
+              </svg>
+              <span>Chat on WhatsApp to Add Credits (+91 96633 96058)</span>
+            </a>
+          </div>
+
+          <div class="contact-footer-note">
+            <span>⚡ Instant activation: Send your email ID on WhatsApp, complete UPI payment, and credits are added within seconds!</span>
+          </div>
         </div>
       </div>
     </div>

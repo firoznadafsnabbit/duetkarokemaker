@@ -1596,12 +1596,20 @@ function initEventListeners() {
     dom.paneSrcFile.classList.remove('active');
   });
 
-  dom.btnRunAutopilot?.addEventListener('click', runOneClickAutoDuet);
-  dom.btnFetchYt?.addEventListener('click', runOneClickAutoDuet);
+  const executeGuarded = (fn) => {
+    if (window.KaraokeAuth && typeof window.KaraokeAuth.guardCreditAction === 'function') {
+      window.KaraokeAuth.guardCreditAction(fn);
+    } else {
+      fn();
+    }
+  };
+
+  dom.btnRunAutopilot?.addEventListener('click', () => executeGuarded(runOneClickAutoDuet));
+  dom.btnFetchYt?.addEventListener('click', () => executeGuarded(runOneClickAutoDuet));
   dom.ytUrlInput?.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      runOneClickAutoDuet();
+      executeGuarded(runOneClickAutoDuet);
     }
   });
 
@@ -1690,10 +1698,10 @@ function initEventListeners() {
     a.click();
   });
 
-  dom.btnRenderLive?.addEventListener('click', renderVideoLive);
-  dom.btnRenderUniversal?.addEventListener('click', renderVideoWithFfmpeg);
-  dom.btnRenderBrowser?.addEventListener('click', renderVideoLive);
-  dom.btnRenderFfmpeg?.addEventListener('click', renderVideoWithFfmpeg);
+  dom.btnRenderLive?.addEventListener('click', () => executeGuarded(renderVideoLive));
+  dom.btnRenderUniversal?.addEventListener('click', () => executeGuarded(renderVideoWithFfmpeg));
+  dom.btnRenderBrowser?.addEventListener('click', () => executeGuarded(renderVideoLive));
+  dom.btnRenderFfmpeg?.addEventListener('click', () => executeGuarded(renderVideoWithFfmpeg));
 
   // Syntax Modal (DRY)
   const toggleSyntaxModal = (show) => { dom.syntaxModal.style.display = show ? 'flex' : 'none'; };
