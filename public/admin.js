@@ -8,6 +8,8 @@
 const ADMIN_CONFIG = {
   supabaseUrl: 'https://odvgmniswfpahwkqwtcw.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kdmdtbmlzd2ZwYWh3a3F3dGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzE4MTksImV4cCI6MjEwNzEwNzgxOX0.dl3gytRtsokArFxN_VH2nMABfAF35757ghOnm-dYESs',
+  masterAdminEmail: 'feroznadafm@gmail.com',
+  masterAdminPassword: 'FerozSana@521#',
   defaultPin: '9663',
   whatsappNumber: '919663396058'
 };
@@ -335,32 +337,41 @@ window.addEventListener('DOMContentLoaded', () => {
   // Email Gate submit
   document.getElementById('form-admin-email').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('admin-email-input').value.trim();
+    const email = document.getElementById('admin-email-input').value.trim().toLowerCase();
     const password = document.getElementById('admin-password-input').value;
     const errEl = document.getElementById('gate-error');
     const submitBtn = document.getElementById('btn-email-submit');
 
-    if (!supabaseAdmin) {
-      errEl.textContent = 'Supabase client not ready.';
+    // 1. Strict admin verification: Only designated administrator allowed!
+    if (email !== ADMIN_CONFIG.masterAdminEmail.toLowerCase()) {
+      errEl.textContent = `❌ Access Denied: Only designated admin (${ADMIN_CONFIG.masterAdminEmail}) is authorized.`;
       errEl.style.display = 'block';
       return;
     }
 
-    try {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Verifying...';
-      const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      errEl.style.display = 'none';
-      unlockAdminPanel(data.user.email);
-    } catch (err) {
-      errEl.textContent = `❌ ${err.message || 'Login failed'}`;
+    if (password !== ADMIN_CONFIG.masterAdminPassword) {
+      errEl.textContent = '❌ Incorrect password. Access denied.';
       errEl.style.display = 'block';
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Sign In as Admin →';
+      return;
     }
+
+    // 2. Validated successfully!
+    errEl.style.display = 'none';
+
+    if (supabaseAdmin) {
+      try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Authenticating...';
+        await supabaseAdmin.auth.signInWithPassword({ email, password });
+      } catch (err) {
+        console.warn('[Admin] Cloud session note:', err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In as Admin →';
+      }
+    }
+
+    unlockAdminPanel(ADMIN_CONFIG.masterAdminEmail);
   });
 
   // Lock button

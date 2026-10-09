@@ -48,31 +48,31 @@
 
         <!-- Tab Switcher -->
         <div class="gate-tabs">
-          <button type="button" class="gate-tab active" id="tab-pin">Secret PIN</button>
-          <button type="button" class="gate-tab" id="tab-email">Admin Login</button>
+          <button type="button" class="gate-tab active" id="tab-email">Admin Login</button>
+          <button type="button" class="gate-tab" id="tab-pin">Secret PIN</button>
         </div>
 
+        <!-- EMAIL LOGIN FORM (DEFAULT) -->
+        <form id="form-admin-email" class="gate-form">
+          <div class="input-group">
+            <label for="admin-email-input">Admin Email</label>
+            <input type="email" id="admin-email-input" value="feroznadafm@gmail.com" required readonly style="background: rgba(0, 242, 254, 0.06); border-color: rgba(0, 242, 254, 0.35);">
+          </div>
+          <div class="input-group">
+            <label for="admin-password-input">Admin Password</label>
+            <input type="password" id="admin-password-input" placeholder="Enter admin password" autofocus required>
+          </div>
+          <button type="submit" class="btn-gate-submit" id="btn-email-submit">Sign In as Admin →</button>
+        </form>
+
         <!-- PIN FORM -->
-        <form id="form-admin-pin" class="gate-form">
+        <form id="form-admin-pin" class="gate-form" style="display: none;">
           <div class="input-group">
             <label for="admin-pin-input">Admin Passcode / PIN</label>
-            <input type="password" id="admin-pin-input" placeholder="Enter PIN (Default: 9663)" autocomplete="current-password" autofocus required>
+            <input type="password" id="admin-pin-input" placeholder="Enter PIN (Default: 9663)" autocomplete="current-password" required>
           </div>
           <button type="submit" class="btn-gate-submit" id="btn-pin-submit">Unlock Dashboard →</button>
           <div class="gate-hint">💡 Default PIN is <code>9663</code> (Change anytime in dashboard)</div>
-        </form>
-
-        <!-- EMAIL LOGIN FORM -->
-        <form id="form-admin-email" class="gate-form" style="display: none;">
-          <div class="input-group">
-            <label for="admin-email-input">Admin Email</label>
-            <input type="email" id="admin-email-input" placeholder="owner@example.com" required>
-          </div>
-          <div class="input-group">
-            <label for="admin-password-input">Password</label>
-            <input type="password" id="admin-password-input" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="btn-gate-submit" id="btn-email-submit">Sign In as Admin →</button>
         </form>
 
         <div id="gate-error" class="gate-error" style="display: none;"></div>
