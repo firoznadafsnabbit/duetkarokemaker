@@ -1310,32 +1310,9 @@ input[type="color"]::-webkit-color-swatch {
   background: linear-gradient(90deg, #00f2fe, #ff00ff, #ffff00);
 }
 
-.autopilot-badge-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.autopilot-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  background: rgba(0, 242, 254, 0.15);
-  color: var(--brand-cyan);
-  border: 1px solid rgba(0, 242, 254, 0.3);
-}
-
+.autopilot-badge-row,
 .autopilot-desc {
-  font-size: 0.86rem;
-  color: var(--text-muted);
-  line-height: 1.45;
+  display: none !important;
 }
 
 .autopilot-source-tabs {
