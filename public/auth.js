@@ -9,7 +9,7 @@
 
 const SUPABASE_CONFIG = {
   url: 'https://odvgmniswfpahwkqwtcw.supabase.co',
-  anonKey: localStorage.getItem('supabase_anon_key') || '',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kdmdtbmlzd2ZwYWh3a3F3dGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzE4MTksImV4cCI6MjEwNzEwNzgxOX0.dl3gytRtsokArFxN_VH2nMABfAF35757ghOnm-dYESs',
   whatsappNumber: '919663396058',
   freeCredits: 3
 };
