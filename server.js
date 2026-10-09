@@ -200,6 +200,8 @@ const serveStatic = (res, pathname) => {
   let safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
   if (safePath === '/' || safePath === '\\') {
     safePath = fs.existsSync(path.join(PUBLIC_DIR, 'index.html')) ? '/index.html' : '/studio.html';
+  } else if (safePath === '/admin' || safePath === '\\admin') {
+    safePath = '/admin.html';
   }
 
   const filePath = path.join(PUBLIC_DIR, safePath);

@@ -4,6 +4,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/", "destination": "/public/index.html" },
+    { "source": "/admin", "destination": "/public/admin.html" },
     { "source": "/((?!api/).*)", "destination": "/public/$1" }
   ]
 }
