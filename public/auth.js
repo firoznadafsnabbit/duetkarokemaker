@@ -17,6 +17,7 @@ const SUPABASE_CONFIG = {
 let supabaseClient = null;
 let currentUser = null;
 let currentCredits = 0;
+let pendingGuardedAction = null;
 
 function initSupabase() {
   if (typeof supabase === 'undefined') {
@@ -154,6 +155,7 @@ function openAuthModal(initialTab = 'signin', pendingNotice = '') {
 function closeAuthModal() {
   const modal = document.getElementById('auth-modal');
   if (modal) modal.style.display = 'none';
+  pendingGuardedAction = null;
 }
 
 function setAuthTab(tab) {
@@ -225,6 +227,14 @@ async function handleSignIn(e) {
     currentUser = data.user;
     await loadUserProfile(currentUser);
     closeAuthModal();
+
+    if (pendingGuardedAction) {
+      const pendingFn = pendingGuardedAction;
+      pendingGuardedAction = null;
+      setTimeout(() => {
+        guardCreditAction(pendingFn);
+      }, 350);
+    }
   } catch (err) {
     showAuthError(err.message || 'Failed to sign in.');
   } finally {
@@ -269,6 +279,14 @@ async function handleSignUp(e) {
       currentUser = data.user;
       await loadUserProfile(currentUser);
       closeAuthModal();
+
+      if (pendingGuardedAction) {
+        const pendingFn = pendingGuardedAction;
+        pendingGuardedAction = null;
+        setTimeout(() => {
+          guardCreditAction(pendingFn);
+        }, 350);
+      }
     } else {
       const noticeEl = document.getElementById('auth-modal-notice');
       if (noticeEl) {
@@ -321,9 +339,10 @@ function openKeySetupModal(reason = '') {
  * If no, shows auth modal or contact popup.
  */
 async function guardCreditAction(actionCallback) {
-  // 1. Must be logged in
+  // 1. Must be logged in: STRICT ENFORCEMENT - No song can be rendered without signing in!
   if (!currentUser) {
-    openAuthModal('signin', '🎁 Sign in or create a free account to use your 3 free song generations!');
+    pendingGuardedAction = actionCallback;
+    openAuthModal('signin', '🔒 Sign In Required: You must sign in or create an account to render your karaoke song! (🎁 You will get 3 Free Songs)');
     return false;
   }
 

@@ -927,6 +927,12 @@ Remaining lines: only the timestamped duet karaoke lines.`;
 }
 
 async function runOneClickAutoDuet() {
+  // STRICT AUTH GUARD: Must be signed in to generate songs
+  if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
+    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to generate karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+    return;
+  }
+
   const isFileMode = dom.tabSrcFile?.classList.contains('active');
   const apiKey = (dom.ytApiKey?.value || localStorage.getItem('duet_gemini_api_key') || '').trim();
   if (apiKey) {
@@ -1273,6 +1279,12 @@ const presentRenderedVideo = ({ url, filename, description }) => {
 };
 
 async function renderVideoLive() {
+  // STRICT AUTH GUARD: Must be signed in to render video
+  if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
+    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+    return;
+  }
+
   if (!state.audioElement.src) {
     alert('Please upload or import an audio file first.');
     return;
@@ -1428,6 +1440,12 @@ async function renderVideoLive() {
 }
 
 async function renderVideoWithFfmpeg() {
+  // STRICT AUTH GUARD: Must be signed in to render video
+  if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
+    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+    return;
+  }
+
   if (!state.ffmpegAvailable) {
     alert('FFmpeg was not detected on the server. Please install FFmpeg (via install_ffmpeg.bat) or use "Render & Watch Live Video".');
     return;
@@ -1597,11 +1615,16 @@ function initEventListeners() {
   });
 
   const executeGuarded = (fn) => {
-    if (window.KaraokeAuth && typeof window.KaraokeAuth.guardCreditAction === 'function') {
-      window.KaraokeAuth.guardCreditAction(fn);
-    } else {
-      fn();
+    if (!window.KaraokeAuth) {
+      alert('Authentication service is initializing. Please wait a moment...');
+      return false;
     }
+    const user = window.KaraokeAuth.getCurrentUser();
+    if (!user) {
+      window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs! (🎁 Sign in or create a free account for 3 Free Songs)');
+      return false;
+    }
+    return window.KaraokeAuth.guardCreditAction(fn);
   };
 
   dom.btnRunAutopilot?.addEventListener('click', () => executeGuarded(runOneClickAutoDuet));
@@ -1687,15 +1710,17 @@ function initEventListeners() {
     }
   });
 
-  // Export Buttons
+  // Export Buttons (Guarded)
   dom.btnExportAss?.addEventListener('click', () => {
-    const assContent = generateAssSubtitle();
-    const blob = new Blob([assContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'duet_karaoke.ass';
-    a.click();
+    executeGuarded(() => {
+      const assContent = generateAssSubtitle();
+      const blob = new Blob([assContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'duet_karaoke.ass';
+      a.click();
+    });
   });
 
   dom.btnRenderLive?.addEventListener('click', () => executeGuarded(renderVideoLive));
