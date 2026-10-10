@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'feroznadafm@gmail.com').toLowerCase();
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const DEFAULT_ADMIN_PASSWORD_HASH = '196f2deff8658060de89629dae41bbb4:cf49c84b2c38a7002793f32aa83304cab88424a6003cbea7017721eabd2aa151a57d2c4cb3daa79e22299c807cb792a3dcdbb452b0d6ed042d2c9f47ea28cbbe';
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'feroznadafm@gmail.com').toLowerCase().trim();
+const ADMIN_PASSWORD_HASH = (process.env.ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_PASSWORD_HASH).trim();
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'duet-default-secret-change-me';
 
 function verifyAdminPassword(password) {

@@ -42,9 +42,10 @@ const IS_DEBUG = process.env.DEBUG === 'true';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TEMP_DIR = path.join(os.tmpdir(), 'duet-karaoke');
 
+const DEFAULT_ADMIN_PASSWORD_HASH = '196f2deff8658060de89629dae41bbb4:cf49c84b2c38a7002793f32aa83304cab88424a6003cbea7017721eabd2aa151a57d2c4cb3daa79e22299c807cb792a3dcdbb452b0d6ed042d2c9f47ea28cbbe';
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'feroznadafm@gmail.com').toLowerCase().trim();
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
-const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const ADMIN_PASSWORD_HASH = (process.env.ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_PASSWORD_HASH).trim();
+const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || '9de27f4c519e1116b9dd80134fa7de216b91e6a9a0a3407776ef8b84173ae935';
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
   .split(',')
   .map(o => o.trim().toLowerCase())
