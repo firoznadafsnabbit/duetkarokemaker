@@ -3131,6 +3131,18 @@ input[type="color"]::-webkit-color-swatch {
   text-decoration: underline;
 }
 
+.footer-links-list a.footer-link {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-links-list a.footer-link:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
 .footer-bottom-bar {
   display: flex;
   align-items: center;

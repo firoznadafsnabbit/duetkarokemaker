@@ -443,6 +443,16 @@ const serveStatic = (req, res, pathname) => {
     safePath = '/index.html';
   } else if (safePath === '/admin' || safePath === '\\admin') {
     safePath = '/admin.html';
+  } else if (safePath === '/privacy' || safePath === '\\privacy') {
+    safePath = '/privacy.html';
+  } else if (safePath === '/terms' || safePath === '\\terms') {
+    safePath = '/terms.html';
+  } else if (safePath === '/refund' || safePath === '\\refund') {
+    safePath = '/refund.html';
+  } else if (safePath === '/pricing' || safePath === '\\pricing') {
+    safePath = '/pricing.html';
+  } else if (safePath === '/contact' || safePath === '\\contact') {
+    safePath = '/contact.html';
   }
 
   // Prevent directory traversal

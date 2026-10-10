@@ -20,6 +20,11 @@
   "rewrites": [
     { "source": "/", "destination": "/public/index.html" },
     { "source": "/admin", "destination": "/public/admin.html" },
+    { "source": "/privacy", "destination": "/public/privacy.html" },
+    { "source": "/terms", "destination": "/public/terms.html" },
+    { "source": "/refund", "destination": "/public/refund.html" },
+    { "source": "/pricing", "destination": "/public/pricing.html" },
+    { "source": "/contact", "destination": "/public/contact.html" },
     { "source": "/((?!api/).*)", "destination": "/public/$1" }
   ]
 }

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | Karoke Maker by Armaan Karaoke</title>
+  <meta name="description" content="Privacy Policy for Karoke Maker by Armaan Karaoke Tech Solutions. Learn how we handle authentication, cookies, and protect user data under GDPR, CCPA & DPDP Act.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="legal.css">
+</head>
+<body>
+  <div class="legal-bg-glow"></div>
+
+  <!-- Header -->
+  <header class="legal-header">
+    <div class="legal-header-inner">
+      <a href="/" class="legal-brand">
+        <div class="legal-brand-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+        </div>
+        <div>
+          <div class="legal-brand-title">Karoke Maker</div>
+          <div class="legal-brand-sub">by Armaan Karaoke Tech Solutions</div>
+        </div>
+      </a>
+
+      <div class="legal-header-nav">
+        <a href="/" class="btn-back-home">← Back to Studio</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sub-Navigation across all legal pages -->
+  <nav class="legal-subnav" aria-label="Policy Navigation">
+    <div class="legal-subnav-inner">
+      <a href="/privacy" class="subnav-link active">Privacy Policy</a>
+      <a href="/terms" class="subnav-link">Terms of Service</a>
+      <a href="/refund" class="subnav-link">Refund &amp; Cancellation</a>
+      <a href="/pricing" class="subnav-link">Pricing &amp; Delivery</a>
+      <a href="/contact" class="subnav-link">Contact Us</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="legal-main">
+    <div class="legal-hero">
+      <span class="legal-tag">Legal &amp; Data Protection</span>
+      <h1 class="legal-title">Privacy Policy</h1>
+      <div class="legal-meta">
+        <span><strong>Effective Date:</strong> October 10, 2026</span>
+        <span>•</span>
+        <span><strong>Jurisdiction:</strong> India (DPDP Act 2023) &amp; Global (GDPR / CCPA)</span>
+        <span>•</span>
+        <span><strong>Operator:</strong> Armaan Karaoke Tech Solutions</span>
+      </div>
+    </div>
+
+    <div class="legal-layout">
+      <!-- Sidebar TOC -->
+      <aside class="legal-toc">
+        <div class="toc-title">On This Page</div>
+        <ul class="toc-list">
+          <li><a href="#overview">1. Overview &amp; Architecture</a></li>
+          <li><a href="#collection">2. Information We Collect</a></li>
+          <li><a href="#client-side">3. Client-Side Processing</a></li>
+          <li><a href="#cookies">4. Cookies &amp; Storage</a></li>
+          <li><a href="#payments">5. Payment Data Security</a></li>
+          <li><a href="#compliance">6. GDPR, CCPA &amp; DPDP</a></li>
+          <li><a href="#deletion">7. Account &amp; Data Deletion</a></li>
+          <li><a href="#contact">8. Grievance &amp; Contact</a></li>
+        </ul>
+      </aside>
+
+      <!-- Content Article -->
+      <article class="legal-content">
+        <section class="legal-section" id="overview">
+          <h2><span class="sec-num">01</span> Overview &amp; Privacy-First Architecture</h2>
+          <p>Welcome to <strong>Karoke Maker</strong>, operated by <strong>Armaan Karaoke Tech Solutions</strong> ("we", "us", "our"). We are committed to protecting the privacy, security, and integrity of your personal information.</p>
+          <div class="legal-alert green">
+            <strong>🔒 Privacy by Design:</strong> Your private audio files and song lyrics are rendered directly inside your web browser (client-side HTML5 Canvas &amp; Web Audio API). We do not save, store, or sell your audio files on our servers.
+          </div>
+          <p>This Privacy Policy explains what limited personal data we collect, why we collect it, how it is secured, and your legal rights regarding your information.</p>
+        </section>
+
+        <section class="legal-section" id="collection">
+          <h2><span class="sec-num">02</span> Information We Collect</h2>
+          <p>We practice strict data minimization. We only collect the minimal information necessary to deliver and manage your account:</p>
+          <ul>
+            <li><strong>Account Information:</strong> When you register an account, we collect your verified email address and an encrypted cryptographic password hash via our database provider (Supabase).</li>
+            <li><strong>Token &amp; Subscription Balance:</strong> We record the number of song tokens and active Unlimited VIP passes attached to your account profile to authorize video rendering.</li>
+            <li><strong>Technical Telemetry:</strong> Essential HTTP request headers (IP address, user-agent) necessary for DDoS mitigation, rate limiting, and security logs provided by Vercel Cloud infrastructure.</li>
+          </ul>
+        </section>
+
+        <section class="legal-section" id="client-side">
+          <h2><span class="sec-num">03</span> In-Browser Video Generation &amp; Audio Processing</h2>
+          <p>Unlike traditional heavy cloud video converters that upload your entire MP3/WAV files to third-party cloud compute farms, Karoke Maker is engineered to run lightweight client-side:</p>
+          <ul>
+            <li>Your audio files remain on your local device.</li>
+            <li>Real-time duet sweep animations, colors, and timestamps are rendered directly on your local device's graphics processor.</li>
+            <li>Exported 1080p MP4 videos are assembled inside your browser and downloaded straight to your disk.</li>
+          </ul>
+        </section>
+
+        <section class="legal-section" id="cookies">
+          <h2><span class="sec-num">04</span> Cookies &amp; Local Storage</h2>
+          <p>We do not use advertising or tracking cookies. We utilize strictly necessary storage technologies:</p>
+          <div class="legal-table-wrap">
+            <table class="legal-table">
+              <thead>
+                <tr>
+                  <th>Storage Key</th>
+                  <th>Type</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>duet_karaoke_auth_session</code></td>
+                  <td>Local Storage</td>
+                  <td>Keeps you signed into your karaoke account across page refreshes.</td>
+                </tr>
+                <tr>
+                  <td><code>duet_admin_session</code></td>
+                  <td>HTTP-Only Cookie</td>
+                  <td>Encrypted cryptographic session token for administrator authorization.</td>
+                </tr>
+                <tr>
+                  <td><code>cookie_consent</code></td>
+                  <td>Local Storage</td>
+                  <td>Remembers your cookie preferences.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="legal-section" id="payments">
+          <h2><span class="sec-num">05</span> Payment Information Security</h2>
+          <p>Payments for token top-ups and Unlimited VIP passes are handled via direct bank Unified Payments Interface (UPI) or verified payment links:</p>
+          <ul>
+            <li>We <strong>never</strong> collect, view, or store credit card numbers, debit card numbers, CVVs, or bank net-banking passwords.</li>
+            <li>UPI transactions are handled by your authorized UPI banking application (e.g. Google Pay, PhonePe, Paytm, BHIM).</li>
+          </ul>
+        </section>
+
+        <section class="legal-section" id="compliance">
+          <h2><span class="sec-num">06</span> Legal Compliance (DPDP, GDPR &amp; CCPA)</h2>
+          <p>We comply with international and national data protection frameworks:</p>
+          <ul>
+            <li><strong>India DPDP Act 2023:</strong> You have the right to grievance redressal, right to access your summary of data, and right to correction and erasure.</li>
+            <li><strong>GDPR (EU) &amp; UK GDPR:</strong> Legal basis for processing is contract execution (rendering your videos). You have the Right of Access (Art. 15), Right to Rectification (Art. 16), and Right to Erasure ("Right to be Forgotten", Art. 17).</li>
+            <li><strong>CCPA / CPRA (California, USA):</strong> We do not sell or share personal information with third-party advertisers.</li>
+            <li><strong>COPPA &amp; Minors:</strong> Our service is intended for individuals aged 13 and above. We do not knowingly collect personal data from children under 13.</li>
+          </ul>
+        </section>
+
+        <section class="legal-section" id="deletion">
+          <h2><span class="sec-num">07</span> Account &amp; Data Deletion Rights</h2>
+          <p>You have full sovereignty over your account. You can request immediate permanent deletion of your profile, email, and associated tokens at any time:</p>
+          <ul>
+            <li>Use the in-app deletion button at the bottom of the home screen, or</li>
+            <li>Email our privacy team at <a href="mailto:support@armaankaraoke.com" style="color: var(--brand-cyan);">support@armaankaraoke.com</a> with the subject line <em>"Account Deletion Request"</em>.</li>
+          </ul>
+          <p>Upon verification, all account records in Supabase and session keys are permanently purged within 48 hours.</p>
+        </section>
+
+        <section class="legal-section" id="contact">
+          <h2><span class="sec-num">08</span> Grievance Officer &amp; Inquiries</h2>
+          <p>For any privacy queries, data requests, or compliance concerns, please contact our designated Grievance Officer:</p>
+          <div class="contact-card">
+            <div class="contact-card-title">Armaan Karaoke Tech Solutions</div>
+            <div class="contact-card-desc">Grievance &amp; Data Protection Officer</div>
+            <p><strong>Address:</strong> #42, 2nd Cross, 7th Main, BTM Layout 2nd Stage, Bengaluru, Karnataka 560076, India</p>
+            <p style="margin-top: 6px;"><strong>Email:</strong> <a href="mailto:support@armaankaraoke.com" class="contact-card-value">support@armaankaraoke.com</a></p>
+            <p style="margin-top: 6px;"><strong>WhatsApp:</strong> <a href="https://wa.me/919663396058" class="contact-card-value">+91 96633 96058</a></p>
+          </div>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="legal-footer">
+    <div class="legal-footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/refund">Refund Policy</a>
+      <a href="/pricing">Pricing &amp; Delivery</a>
+      <a href="/contact">Contact Us</a>
+    </div>
+    <p>© 2026 Armaan Karaoke Tech Solutions. All rights reserved.</p>
+  </footer>
+</body>
+</html>
