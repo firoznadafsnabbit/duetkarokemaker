@@ -20,24 +20,7 @@ const SUPABASE_CONFIG = {
 let supabaseClient = null;
 let currentUser = null;
 let currentCredits = 0;
-let currentUnlimitedUntil = null;
 let pendingGuardedAction = null;
-
-function isUserUnlimited() {
-  if (!currentUnlimitedUntil) return false;
-  return new Date(currentUnlimitedUntil).getTime() > Date.now();
-}
-
-function getUnlimitedRemainingTime() {
-  if (!isUserUnlimited()) return null;
-  const diffMs = new Date(currentUnlimitedUntil).getTime() - Date.now();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-  if (diffDays > 1) {
-    return `${diffDays} days left`;
-  }
-  return `${diffHours} hours left`;
-}
 
 function initSupabase() {
   if (typeof supabase === 'undefined') {
@@ -78,7 +61,7 @@ async function loadUserProfile(user) {
   try {
     const { data: profile, error } = await supabaseClient
       .from('profiles')
-      .select('credits, unlimited_until')
+      .select('credits')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -86,36 +69,29 @@ async function loadUserProfile(user) {
       console.warn('[Auth] Error fetching profile:', error.message);
     }
 
-    if (profile) {
-      if (typeof profile.credits === 'number') {
-        currentCredits = profile.credits;
-      }
-      currentUnlimitedUntil = profile.unlimited_until || null;
+    if (profile && typeof profile.credits === 'number') {
+      currentCredits = profile.credits;
     } else {
-      // First time user: initialize with 3 free credits
+      // First time user: initialize with 6 free credits (3 videos)
       const { data: newProfile, error: insertError } = await supabaseClient
         .from('profiles')
         .upsert({
           id: user.id,
           email: user.email,
-          credits: SUPABASE_CONFIG.freeCredits,
-          unlimited_until: null
+          credits: SUPABASE_CONFIG.freeCredits
         })
-        .select('credits, unlimited_until')
+        .select('credits')
         .single();
 
-      if (!insertError && newProfile) {
+      if (!insertError && newProfile && typeof newProfile.credits === 'number') {
         currentCredits = newProfile.credits;
-        currentUnlimitedUntil = newProfile.unlimited_until || null;
       } else {
         currentCredits = SUPABASE_CONFIG.freeCredits;
-        currentUnlimitedUntil = null;
       }
     }
   } catch (err) {
     console.error('[Auth] loadUserProfile exception:', err);
     currentCredits = SUPABASE_CONFIG.freeCredits;
-    currentUnlimitedUntil = null;
   }
   updateAuthUI();
   return currentCredits;
@@ -137,31 +113,20 @@ function updateAuthUI() {
     if (profileChip) profileChip.style.display = 'inline-flex';
     if (userEmailDisplay) userEmailDisplay.textContent = currentUser.email || 'Singer';
 
-    if (isUserUnlimited()) {
-      const timeLeft = getUnlimitedRemainingTime();
-      if (userCreditsVal) userCreditsVal.innerHTML = '👑 ∞';
-      if (userCreditsLabel) userCreditsLabel.textContent = `Unlimited (${timeLeft})`;
-      if (creditsPill) {
-        creditsPill.setAttribute('title', `👑 VIP Unlimited Pass Active! You can generate unlimited karaoke videos without tokens. Valid: ${timeLeft}. Click to manage.`);
-        creditsPill.classList.remove('zero', 'low', 'good');
-        creditsPill.classList.add('unlimited');
-      }
-    } else {
-      if (userCreditsVal) userCreditsVal.textContent = currentCredits;
-      if (userCreditsLabel) userCreditsLabel.textContent = 'Tokens';
+    if (userCreditsVal) userCreditsVal.textContent = currentCredits;
+    if (userCreditsLabel) userCreditsLabel.textContent = 'Tokens';
 
-      const videosCount = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
+    const videosCount = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
 
-      if (creditsPill) {
-        creditsPill.setAttribute('title', `${currentCredits} Tokens available (${videosCount} full video${videosCount === 1 ? '' : 's'}). Click to recharge tokens.`);
-        creditsPill.classList.remove('zero', 'low', 'good', 'unlimited');
-        if (currentCredits < SUPABASE_CONFIG.tokensPerVideo) {
-          creditsPill.classList.add('zero');
-        } else if (currentCredits < SUPABASE_CONFIG.tokensPerVideo * 2) {
-          creditsPill.classList.add('low');
-        } else {
-          creditsPill.classList.add('good');
-        }
+    if (creditsPill) {
+      creditsPill.setAttribute('title', `${currentCredits} Tokens available (${videosCount} full video${videosCount === 1 ? '' : 's'}). Click to recharge tokens.`);
+      creditsPill.classList.remove('zero', 'low', 'good');
+      if (currentCredits < SUPABASE_CONFIG.tokensPerVideo) {
+        creditsPill.classList.add('zero');
+      } else if (currentCredits < SUPABASE_CONFIG.tokensPerVideo * 2) {
+        creditsPill.classList.add('low');
+      } else {
+        creditsPill.classList.add('good');
       }
     }
   } else {
@@ -174,30 +139,16 @@ function updateAuthUI() {
   const modalVideosVal = document.getElementById('contact-current-videos');
   const modalEmailVal = document.getElementById('contact-user-email');
   if (modalTokensVal) {
-    if (isUserUnlimited()) {
-      modalTokensVal.innerHTML = `👑 ∞ (${getUnlimitedRemainingTime()})`;
-    } else {
-      modalTokensVal.textContent = currentCredits;
-    }
+    modalTokensVal.textContent = currentCredits;
   }
   if (modalVideosVal) {
-    if (isUserUnlimited()) {
-      modalVideosVal.textContent = 'Unlimited';
-    } else {
-      modalVideosVal.textContent = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
-    }
+    modalVideosVal.textContent = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
   }
   if (modalEmailVal && currentUser?.email) modalEmailVal.textContent = currentUser.email;
 }
 
 async function deductSongCredit(amount = SUPABASE_CONFIG.tokensPerVideo) {
   if (!currentUser) return false;
-
-  // 👑 Unlimited Pass bypasses token deduction completely!
-  if (isUserUnlimited()) {
-    console.log('[Auth] Active Unlimited Pass - 0 tokens deducted.');
-    return true;
-  }
 
   if (currentCredits < amount) return false;
 
@@ -710,20 +661,14 @@ async function guardCreditAction(actionCallback) {
     return false;
   }
 
-  // 👑 2. Unlimited Pass: VIP singers have unlimited song renders without deducting tokens!
-  if (isUserUnlimited()) {
-    console.log('[Auth] 👑 Unlimited Pass Active - executing render without token deduction.');
-    return await actionCallback();
-  }
-
-  // 3. Check tokens: 2 tokens required per video render
+  // 2. Check tokens: 2 tokens required per video render
   const requiredTokens = SUPABASE_CONFIG.tokensPerVideo;
   if (currentCredits < requiredTokens) {
     openOutOfCreditsModal();
     return false;
   }
 
-  // 4. User has enough tokens: execute action and deduct 2 tokens
+  // 3. User has enough tokens: execute action and deduct 2 tokens
   try {
     const result = await actionCallback();
     await deductSongCredit(requiredTokens);
@@ -1067,9 +1012,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   window.KaraokeAuth = {
     guardCreditAction,
     deductSongCredit,
-    isUserUnlimited,
-    getUnlimitedRemainingTime,
-    getUnlimitedUntil: () => currentUnlimitedUntil,
     openAuthModal,
     openOutOfCreditsModal,
     openPrivacyModal,

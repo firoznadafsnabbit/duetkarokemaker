@@ -183,17 +183,13 @@ function updateMetrics(users) {
   const zeroCredits = users.filter(u => (u.credits || 0) <= 0).length;
   const activeUsers = users.filter(u => (u.credits || 0) > 0).length;
   const totalCredits = users.reduce((acc, u) => acc + (u.credits || 0), 0);
-  const now = Date.now();
-  const unlimitedPasses = users.filter(u => u.unlimited_until && new Date(u.unlimited_until).getTime() > now).length;
 
   setText('stat-total-users', total);
   setText('stat-zero-credits', zeroCredits);
   setText('stat-active-users', activeUsers);
   setText('stat-total-credits', totalCredits);
-  setText('stat-unlimited-passes', unlimitedPasses);
 
   setText('count-filter-all', total);
-  setText('count-filter-unlimited', unlimitedPasses);
   setText('count-filter-zero', zeroCredits);
   setText('count-filter-active', activeUsers);
 }
@@ -208,7 +204,6 @@ function renderUsersTable() {
   const tbody = document.getElementById('users-table-body');
   if (!tbody) return;
   
-  const now = Date.now();
   let filtered = allUsers.filter(u => {
     if (currentSearch) {
       const q = currentSearch.toLowerCase();
@@ -218,9 +213,7 @@ function renderUsersTable() {
     }
 
     const creds = u.credits || 0;
-    const isUnlim = u.unlimited_until && new Date(u.unlimited_until).getTime() > now;
 
-    if (currentFilter === 'unlimited') return isUnlim;
     if (currentFilter === 'zero') return creds <= 0;
     if (currentFilter === 'active') return creds > 0;
     return true;
@@ -229,7 +222,7 @@ function renderUsersTable() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="table-empty">
+        <td colspan="6" class="table-empty">
           ${allUsers.length === 0 ? 'No registered users found yet.' : 'No users match your search/filter.'}
         </td>
       </tr>`;
@@ -247,22 +240,13 @@ function renderUsersTable() {
     const safeUserId = escapeHtml(u.id || '');
     const rowId = `user-row-${idx}`;
 
-    const isUnlimited = u.unlimited_until && new Date(u.unlimited_until).getTime() > now;
-    let daysLeft = 0;
-    let expDateStr = '';
-    if (isUnlimited) {
-      const msLeft = new Date(u.unlimited_until).getTime() - now;
-      daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
-      expDateStr = new Date(u.unlimited_until).toLocaleDateString();
-    }
-
     return `
       <tr data-user-id="${safeUserId}" data-email="${email}">
         <td>
           <div class="user-email-cell">
             <span class="user-email-text-full">${email}</span>
             <button type="button" class="btn-copy-mini btn-action-copy" data-copy="${email}" title="Copy Email">Copy</button>
-            ${credits <= 0 && !isUnlimited ? `<a href="https://wa.me/${ADMIN_CONFIG.whatsappNumber}?text=Hi+${encodeURIComponent(u.email || '')}+your+credits+are+ready" target="_blank" rel="noopener noreferrer" class="btn-copy-mini" title="Send WhatsApp Message">WhatsApp</a>` : ''}
+            ${credits <= 0 ? `<a href="https://wa.me/${ADMIN_CONFIG.whatsappNumber}?text=Hi+${encodeURIComponent(u.email || '')}+your+credits+are+ready" target="_blank" rel="noopener noreferrer" class="btn-copy-mini" title="Send WhatsApp Message">WhatsApp</a>` : ''}
           </div>
         </td>
         <td>
@@ -271,27 +255,6 @@ function renderUsersTable() {
               ${credits} ${credits === 1 ? 'Song' : 'Songs'}
             </span>
             <span class="sub-label">Remaining</span>
-          </div>
-        </td>
-        <td>
-          <div class="pass-cell-wrap">
-            ${isUnlimited ? `
-              <div class="pass-status-line">
-                <span class="pass-active-badge" title="Valid until ${escapeHtml(expDateStr)}">
-                  👑 Active (${daysLeft}d left)
-                </span>
-                <button type="button" class="btn-pass-revoke btn-action-revoke-pass" data-user-id="${safeUserId}" data-email="${email}" title="Revoke Pass">✕ Revoke</button>
-              </div>
-            ` : `
-              <div class="pass-status-line">
-                <span class="pass-none-badge">No Pass</span>
-              </div>
-            `}
-            <div class="pass-action-chips">
-              <button type="button" class="btn-pass-chip btn-action-grant-pass" data-user-id="${safeUserId}" data-email="${email}" data-days="28" title="Grant 28 Days Unlimited">+28d</button>
-              <button type="button" class="btn-pass-chip btn-action-grant-pass" data-user-id="${safeUserId}" data-email="${email}" data-days="30" title="Grant 30 Days Unlimited">+30d</button>
-              <button type="button" class="btn-pass-chip btn-action-grant-pass" data-user-id="${safeUserId}" data-email="${email}" data-days="90" title="Grant 90 Days Unlimited">+90d</button>
-            </div>
           </div>
         </td>
         <td>
@@ -389,75 +352,6 @@ async function setCredits(userId, email, newCredits) {
     }
   } catch (err) {
     console.error('[Admin] Update credits error:', err);
-    showToast(`Error: ${err.message}`, 'error');
-  }
-}
-
-// Grant or Revoke Unlimited Pass for a user (e.g. 28, 30, 90 days)
-async function grantUnlimitedPass(userId, email, daysCount) {
-  const days = parseInt(daysCount, 10);
-  if (isNaN(days)) return;
-
-  const target = allUsers.find(u => (userId && u.id === userId) || (u.email || '').toLowerCase() === (email || '').toLowerCase());
-  let targetIso = null;
-
-  if (days > 0) {
-    const now = Date.now();
-    let baseTime = new Date();
-    if (target?.unlimited_until && new Date(target.unlimited_until).getTime() > now) {
-      baseTime = new Date(target.unlimited_until);
-    }
-    baseTime.setDate(baseTime.getDate() + days);
-    targetIso = baseTime.toISOString();
-  }
-
-  try {
-    let success = false;
-
-    // 1. Try secure Postgres RPC function first
-    if (supabaseAdmin) {
-      try {
-        const rpcRes = await supabaseAdmin.rpc('admin_set_unlimited_pass', {
-          target_email: email,
-          days_count: days
-        });
-        if (!rpcRes.error && rpcRes.data?.success) {
-          success = true;
-          if (rpcRes.data.unlimited_until) {
-            targetIso = rpcRes.data.unlimited_until;
-          }
-        }
-      } catch (_) {}
-    }
-
-    // 2. Direct table update fallback
-    if (!success && supabaseAdmin) {
-      const matchCriteria = userId ? { id: userId } : { email: email };
-      const { error } = await supabaseAdmin
-        .from('profiles')
-        .update({ unlimited_until: targetIso })
-        .match(matchCriteria);
-
-      if (!error) success = true;
-    }
-
-    if (success) {
-      if (target) {
-        target.unlimited_until = targetIso;
-      }
-      updateMetrics(allUsers);
-      renderUsersTable();
-      if (days > 0) {
-        const expFormatted = targetIso ? new Date(targetIso).toLocaleDateString() : '';
-        showToast(`👑 Granted ${days} Days Unlimited Pass to ${email}! (Valid until ${expFormatted})`, 'success');
-      } else {
-        showToast(`Revoked Unlimited Pass for ${email}.`, 'success');
-      }
-    } else {
-      showToast('Could not update pass. Please verify Supabase permissions or run SQL setup.', 'error');
-    }
-  } catch (err) {
-    console.error('[Admin] Grant pass error:', err);
     showToast(`Error: ${err.message}`, 'error');
   }
 }
@@ -750,27 +644,6 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 👑 Grant Unlimited Pass Chip (+28d, +30d, +90d)
-      const grantPassBtn = e.target.closest('.btn-action-grant-pass');
-      if (grantPassBtn) {
-        const userId = grantPassBtn.getAttribute('data-user-id');
-        const email = grantPassBtn.getAttribute('data-email');
-        const days = parseInt(grantPassBtn.getAttribute('data-days') || '28', 10);
-        if (confirm(`👑 Grant ${days} Days Unlimited Pass to ${email}?\n\nThis singer will be able to generate unlimited karaoke videos without any tokens!`)) {
-          grantUnlimitedPass(userId, email, days);
-        }
-        return;
-      }
-
-      // Revoke Unlimited Pass
-      const revokePassBtn = e.target.closest('.btn-action-revoke-pass');
-      if (revokePassBtn) {
-        const userId = revokePassBtn.getAttribute('data-user-id');
-        const email = revokePassBtn.getAttribute('data-email');
-        if (confirm(`Revoke the Unlimited Pass for ${email}?\n\nUser will return to regular per-video token deductions.`)) {
-          grantUnlimitedPass(userId, email, 0);
-        }
-        return;
       }
     });
 
@@ -833,24 +706,6 @@ window.addEventListener('DOMContentLoaded', () => {
       const amountInput = document.getElementById('direct-amount-input');
       if (amountInput) amountInput.value = val;
       updateTopupCalcPreview();
-    });
-  });
-
-  // Direct Top-up Unlimited Pass Presets (28d, 30d, 90d)
-  document.querySelectorAll('.btn-preset-pass').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const days = parseInt(btn.getAttribute('data-pass'), 10);
-      const emailInput = document.getElementById('direct-email-input');
-      const email = emailInput?.value.trim();
-      if (!email) {
-        emailInput?.focus();
-        showToast('Please enter customer email first.', 'error');
-        return;
-      }
-      if (confirm(`👑 Grant ${days} Days Unlimited Pass to ${email}?\n\nUser will be able to render unlimited karaoke videos without tokens.`)) {
-        grantUnlimitedPass(null, email, days);
-        emailInput.value = '';
-      }
     });
   });
 
