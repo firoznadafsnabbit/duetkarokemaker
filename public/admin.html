@@ -93,14 +93,21 @@
             <span class="stat-value text-success" id="stat-active-users">0</span>
           </div>
         </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">👑 Unlimited Passes</span>
+            <span class="stat-value text-gold" id="stat-unlimited-passes">0</span>
+          </div>
+        </div>
       </section>
 
       <!-- QUICK TOP-UP BY EMAIL BANNER -->
       <section class="quick-topup-section">
         <div class="quick-topup-card">
           <div class="topup-header">
-            <h3>Quick Credit Grant</h3>
-            <p>Add credits directly to any customer when they pay you on WhatsApp.</p>
+            <h3>Quick Credit &amp; Unlimited Pass Grant</h3>
+            <p>Add song credits or grant 28-day, 30-day, or 90-day unlimited VIP passes directly to any customer.</p>
           </div>
           <form id="form-direct-topup" class="topup-form">
             <div class="form-row">
@@ -110,6 +117,9 @@
                 <button type="button" class="btn-preset active" data-amount="10">+10</button>
                 <button type="button" class="btn-preset" data-amount="20">+20</button>
                 <button type="button" class="btn-preset" data-amount="50">+50</button>
+                <button type="button" class="btn-preset btn-preset-pass" data-pass="28">⚡ 28d Pass</button>
+                <button type="button" class="btn-preset btn-preset-pass" data-pass="30">⚡ 30d Pass</button>
+                <button type="button" class="btn-preset btn-preset-pass" data-pass="90">⚡ 90d Pass</button>
               </div>
               <input type="number" id="direct-amount-input" min="1" max="1000" value="10" title="Custom Amount">
               <button type="submit" class="btn-grant-credits" id="btn-grant-submit">Review & Approve</button>
@@ -133,6 +143,7 @@
 
           <div class="filter-chips">
             <button type="button" class="filter-chip active" data-filter="all">All Users (<span id="count-filter-all">0</span>)</button>
+            <button type="button" class="filter-chip text-gold" data-filter="unlimited">👑 Unlimited (<span id="count-filter-unlimited">0</span>)</button>
             <button type="button" class="filter-chip text-danger" data-filter="zero">0 Credits (<span id="count-filter-zero">0</span>)</button>
             <button type="button" class="filter-chip text-success" data-filter="active">Has Credits (<span id="count-filter-active">0</span>)</button>
           </div>
@@ -145,6 +156,7 @@
               <tr>
                 <th>User Email</th>
                 <th>Remaining Credits</th>
+                <th>👑 Unlimited Pass</th>
                 <th>Adding Credits</th>
                 <th>Approve Top-Up</th>
                 <th>Joined Date</th>
@@ -153,7 +165,7 @@
             </thead>
             <tbody id="users-table-body">
               <tr>
-                <td colspan="6" class="table-loading">Loading users from Supabase...</td>
+                <td colspan="7" class="table-loading">Loading users from Supabase...</td>
               </tr>
             </tbody>
           </table>

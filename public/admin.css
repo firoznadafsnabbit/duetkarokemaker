@@ -1098,6 +1098,107 @@
   transform: none;
 }
 
+/* Unlimited Pass Styles */
+.text-gold {
+  color: #fbbf24 !important;
+}
+
+.pass-cell-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.pass-status-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pass-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+  white-space: nowrap;
+}
+
+.pass-none-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+.pass-action-chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.btn-pass-chip {
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-pass-chip:hover {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-pass-revoke {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-pass-revoke:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.btn-preset-pass {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  font-weight: 700;
+}
+
+.btn-preset-pass:hover {
+  background: rgba(245, 158, 11, 0.25) !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .admin-header {
