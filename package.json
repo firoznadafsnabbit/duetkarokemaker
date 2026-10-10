@@ -1,0 +1,26 @@
+{
+  "name": "duet-karaoke-maker",
+  "version": "2.1.0",
+  "description": "Ultra-lightweight 5-section duet karaoke video studio with real-time word-level sweep renderer",
+  "main": "server.js",
+  "scripts": {
+    "build": "node security_audit.js",
+    "start": "node server.js",
+    "test": "node test_server_security.js",
+    "hash-password": "node hash_password.js",
+    "security-audit": "node security_audit.js"
+  },
+  "keywords": [
+    "karaoke",
+    "duet",
+    "video-maker",
+    "lyrics-sync",
+    "subtitles",
+    "ass"
+  ],
+  "author": "Duet Karaoke Maker",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

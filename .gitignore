@@ -20,6 +20,20 @@ __pycache__/
 node_modules/
 .npm
 .next/
-.env*.local
 
-.vercel
+# Environment & Sensitive Credentials (NEVER COMMIT TO GIT)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+credentials.json
+secrets/
+
+# Cloud Deployments
+.vercel/
+
+# Editor & Workspace
+.vscode/
+.idea/

@@ -1,0 +1,29 @@
+# Cloudflare Pages & Edge Proxy Header Rules
+# Automatically enforced by Cloudflare Edge CDN
+
+# HTML Documents: Immediate browser revalidation, 1 hour edge cache
+/*.html
+  Cache-Control: public, max-age=0, s-maxage=3600, must-revalidate
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Stylesheets: 30 days edge cache, 7 days browser cache
+/*.css
+  Cache-Control: public, max-age=604800, s-maxage=2592000, immutable
+  CDN-Cache-Control: max-age=2592000
+  Cloudflare-CDN-Cache-Control: max-age=2592000
+  X-Content-Type-Options: nosniff
+
+# Scripts: 30 days edge cache, 7 days browser cache
+/*.js
+  Cache-Control: public, max-age=604800, s-maxage=2592000, immutable
+  CDN-Cache-Control: max-age=2592000
+  Cloudflare-CDN-Cache-Control: max-age=2592000
+  X-Content-Type-Options: nosniff
+
+# Web Fonts & Static Media: 1 year immutable edge cache
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+  CDN-Cache-Control: max-age=31536000
+  Cloudflare-CDN-Cache-Control: max-age=31536000

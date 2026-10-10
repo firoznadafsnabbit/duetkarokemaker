@@ -32,7 +32,23 @@ function initSupabase() {
     return null;
   }
   try {
-    supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'duet_karaoke_auth_session'
+      },
+      db: {
+        schema: 'public'
+      },
+      global: {
+        headers: {
+          'x-client-info': 'duet-karaoke-maker-web',
+          'x-connection-pool': 'supavisor-transaction-6543'
+        }
+      }
+    });
     return supabaseClient;
   } catch (err) {
     console.error('[Auth] Failed to initialize Supabase client:', err);
@@ -256,15 +272,15 @@ function updateTokenRechargeUI() {
   const waBtn = document.getElementById('btn-contact-whatsapp');
   if (waBtn) {
     const waMessage = 
-`🎤 *Duet Karaoke Maker - Token Recharge Request* 🎤
+`*Duet Karaoke Maker - Token Recharge Request*
 
-👤 *Login Email:* ${userEmail}
-🪙 *Tokens Needed:* ${selectedTokens} Tokens
-🎬 *Videos to Render:* ${videosCount} Videos (2 tokens/video)
-💰 *Total Amount:* ₹${totalPrice} (₹5/token)
-💳 *UPI ID:* ${SUPABASE_CONFIG.upiId}
+*Login Email:* ${userEmail}
+*Tokens Needed:* ${selectedTokens} Tokens
+*Videos to Render:* ${videosCount} Videos (2 tokens/video)
+*Total Amount:* ₹${totalPrice} (₹5/token)
+*UPI ID:* ${SUPABASE_CONFIG.upiId}
 
-🔗 *UPI Payment Link:*
+*UPI Payment Link:*
 ${upiUri}
 
 I have initiated / completed the payment. Please credit ${selectedTokens} tokens to my account (${userEmail}). Thank you!`;
@@ -334,6 +350,8 @@ async function handleSignUp(e) {
   const email = document.getElementById('auth-signup-email')?.value.trim();
   const password = document.getElementById('auth-signup-password')?.value;
   const confirm = document.getElementById('auth-signup-confirm')?.value;
+  const consentTerms = document.getElementById('auth-consent-terms')?.checked;
+  const consentAge = document.getElementById('auth-consent-age')?.checked;
 
   if (!email || !password) {
     showAuthError('Please fill out all fields.');
@@ -345,6 +363,10 @@ async function handleSignUp(e) {
   }
   if (password !== confirm) {
     showAuthError('Passwords do not match.');
+    return;
+  }
+  if (!consentTerms || !consentAge) {
+    showAuthError('Please accept the Terms & Privacy Policy and confirm you are at least 13 years old to continue.');
     return;
   }
 
@@ -566,6 +588,13 @@ async function handleGateSignUp(e) {
     return;
   }
 
+  const consentTerms = document.getElementById('gate-consent-terms')?.checked;
+  const consentAge = document.getElementById('gate-consent-age')?.checked;
+  if (!consentTerms || !consentAge) {
+    showGateError('Please accept the Terms of Service & Privacy Policy and confirm you are at least 13 years old to continue.');
+    return;
+  }
+
   if (!supabaseClient) {
     showGateError('Database connection error. Please refresh the page.');
     return;
@@ -608,7 +637,7 @@ function openKeySetupModal(reason = '') {
     localStorage.setItem('supabase_anon_key', key.trim());
     SUPABASE_CONFIG.anonKey = key.trim();
     initSupabase();
-    alert('✅ Supabase connected successfully!');
+    alert('Supabase connected successfully.');
   }
 }
 
@@ -622,7 +651,7 @@ async function guardCreditAction(actionCallback) {
   // 1. Must be logged in: STRICT ENFORCEMENT - No song can be rendered without signing in!
   if (!currentUser) {
     pendingGuardedAction = actionCallback;
-    openAuthModal('signin', '🔒 Sign In Required: You must sign in or create an account to render your karaoke video!');
+    openAuthModal('signin', 'Sign In Required: You must sign in or create an account to render your karaoke video.');
     return false;
   }
 
@@ -690,10 +719,10 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (!input) return;
       if (input.type === 'password') {
         input.type = 'text';
-        btn.textContent = '🙈';
+        btn.textContent = 'Hide';
       } else {
         input.type = 'password';
-        btn.textContent = '👁️';
+        btn.textContent = 'Show';
       }
     });
   });
@@ -753,7 +782,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       navigator.clipboard.writeText(SUPABASE_CONFIG.upiId).then(() => {
         if (copyBtn) {
           const oldText = copyBtn.textContent;
-          copyBtn.textContent = '✓ Copied!';
+          copyBtn.textContent = 'Copied!';
           setTimeout(() => { copyBtn.textContent = oldText; }, 2000);
         }
       }).catch(() => {
@@ -771,9 +800,205 @@ window.addEventListener('DOMContentLoaded', async () => {
       const copyBtn = document.getElementById('btn-copy-user-email');
       if (copyBtn) {
         const oldText = copyBtn.textContent;
-        copyBtn.textContent = '✓ Copied!';
+        copyBtn.textContent = 'Copied!';
         setTimeout(() => { copyBtn.textContent = oldText; }, 2000);
       }
+    }
+  });
+
+  // --- Cookie Consent Banner ---
+  function initCookieConsent() {
+    const banner = document.getElementById('cookie-consent-banner');
+    const btnAccept = document.getElementById('btn-cookie-accept');
+    const btnDismiss = document.getElementById('btn-cookie-dismiss');
+    const btnReopen = document.getElementById('btn-reopen-cookie-banner');
+
+    const consent = localStorage.getItem('duet_cookie_consent');
+    if (!consent && banner) {
+      banner.style.display = 'block';
+    }
+
+    btnAccept?.addEventListener('click', () => {
+      localStorage.setItem('duet_cookie_consent', 'accepted');
+      if (banner) banner.style.display = 'none';
+    });
+
+    btnDismiss?.addEventListener('click', () => {
+      localStorage.setItem('duet_cookie_consent', 'dismissed');
+      if (banner) banner.style.display = 'none';
+    });
+
+    btnReopen?.addEventListener('click', () => {
+      if (banner) banner.style.display = 'block';
+    });
+  }
+  initCookieConsent();
+
+  // --- Legal, Privacy, & Licenses Modal ---
+  function openPrivacyModal(targetTab = 'privacy') {
+    const modal = document.getElementById('privacy-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    setLegalTab(targetTab);
+  }
+
+  function closePrivacyModal() {
+    const modal = document.getElementById('privacy-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function setLegalTab(tabName) {
+    const tabs = document.querySelectorAll('.legal-nav-tab');
+    const panes = document.querySelectorAll('.legal-pane');
+
+    tabs.forEach(tab => {
+      const isTarget = tab.getAttribute('data-target') === tabName;
+      tab.classList.toggle('active', isTarget);
+      tab.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+    });
+
+    panes.forEach(pane => {
+      const isTarget = pane.id === `pane-legal-${tabName}`;
+      pane.style.display = isTarget ? 'block' : 'none';
+    });
+  }
+
+  // Bind legal tabs
+  document.querySelectorAll('.legal-nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-target') || 'privacy';
+      setLegalTab(target);
+    });
+  });
+
+  // Bind all triggers that open the legal modal
+  document.querySelectorAll('.link-open-privacy').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = btn.getAttribute('data-tab') || 'privacy';
+      openPrivacyModal(tab);
+    });
+  });
+
+  document.getElementById('btn-close-privacy-modal')?.addEventListener('click', closePrivacyModal);
+  document.getElementById('privacy-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'privacy-modal') closePrivacyModal();
+  });
+
+  document.getElementById('btn-switch-to-deletion')?.addEventListener('click', () => {
+    closePrivacyModal();
+    openDataDeletionModal();
+  });
+
+  // --- Data Deletion Request Modal ---
+  function openDataDeletionModal() {
+    const modal = document.getElementById('data-deletion-modal');
+    const emailInput = document.getElementById('del-email');
+    const errBanner = document.getElementById('deletion-error-banner');
+    const succBanner = document.getElementById('deletion-success-banner');
+    const form = document.getElementById('form-data-deletion');
+
+    if (errBanner) { errBanner.textContent = ''; errBanner.style.display = 'none'; }
+    if (succBanner) { succBanner.innerHTML = ''; succBanner.style.display = 'none'; }
+    if (form) form.style.display = 'block';
+
+    if (emailInput) {
+      emailInput.value = currentUser?.email || '';
+    }
+
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeDataDeletionModal() {
+    const modal = document.getElementById('data-deletion-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function handleDataDeletionSubmit(e) {
+    e.preventDefault();
+    const email = document.getElementById('del-email')?.value.trim();
+    const reason = document.getElementById('del-reason')?.value || 'user_requested';
+    const confirmed = document.getElementById('del-confirm-checkbox')?.checked;
+    const errBanner = document.getElementById('deletion-error-banner');
+    const succBanner = document.getElementById('deletion-success-banner');
+    const submitBtn = document.getElementById('btn-submit-deletion');
+    const form = document.getElementById('form-data-deletion');
+
+    if (errBanner) { errBanner.textContent = ''; errBanner.style.display = 'none'; }
+
+    if (!email) {
+      if (errBanner) { errBanner.textContent = 'Please provide your account email address.'; errBanner.style.display = 'block'; }
+      return;
+    }
+    if (!confirmed) {
+      if (errBanner) { errBanner.textContent = 'Please check the confirmation box to proceed.'; errBanner.style.display = 'block'; }
+      return;
+    }
+
+    try {
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Processing Deletion...'; }
+      const res = await fetch('/api/user/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, reason, confirmed: true })
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || 'Failed to submit deletion request.');
+      }
+
+      if (form) form.style.display = 'none';
+      if (succBanner) {
+        succBanner.innerHTML = `
+          <div class="del-ticket-box">
+            <h4>Account Deletion Scheduled</h4>
+            <p>Your request has been registered under ticket reference <strong>${result.ticketId}</strong>.</p>
+            <p>Your account records and associated session data will be permanently purged in accordance with GDPR, CCPA, and India DPDP 2023 regulations.</p>
+          </div>
+        `;
+        succBanner.style.display = 'block';
+      }
+
+      // If logged-in user matches this email, trigger sign out after a delay
+      if (currentUser && currentUser.email?.toLowerCase() === email.toLowerCase()) {
+        setTimeout(() => {
+          handleSignOut();
+        }, 3500);
+      }
+    } catch (err) {
+      if (errBanner) {
+        errBanner.textContent = err.message || 'Error processing deletion request.';
+        errBanner.style.display = 'block';
+      }
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Permanently Delete My Account & Data'; }
+    }
+  }
+
+  // Bind deletion triggers
+  document.querySelectorAll('.link-open-data-deletion').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDataDeletionModal();
+    });
+  });
+
+  document.getElementById('btn-close-deletion-modal')?.addEventListener('click', closeDataDeletionModal);
+  document.getElementById('btn-cancel-deletion')?.addEventListener('click', closeDataDeletionModal);
+  document.getElementById('data-deletion-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'data-deletion-modal') closeDataDeletionModal();
+  });
+  document.getElementById('form-data-deletion')?.addEventListener('submit', handleDataDeletionSubmit);
+
+  // Keyboard navigation: Escape key closes all open dialogs
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closePrivacyModal();
+      closeDataDeletionModal();
+      closeAuthModal();
+      closeOutOfCreditsModal();
+      const syntaxModal = document.getElementById('syntax-help-modal');
+      if (syntaxModal) syntaxModal.style.display = 'none';
     }
   });
 
@@ -783,6 +1008,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     deductSongCredit,
     openAuthModal,
     openOutOfCreditsModal,
+    openPrivacyModal,
+    openDataDeletionModal,
     selectTokens,
     syncAuthGateState,
     getCurrentUser: () => currentUser,

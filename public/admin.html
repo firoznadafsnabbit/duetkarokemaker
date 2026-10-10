@@ -23,56 +23,38 @@
           ← Back to App
         </a>
         <div class="admin-title-wrap">
-          <h1>🛡️ Admin Dashboard</h1>
-          <span class="admin-badge">Karaoke Maker Control</span>
+          <h1>Admin Dashboard</h1>
         </div>
       </div>
 
       <div class="admin-header-actions" id="admin-header-actions" style="display: none;">
-        <span class="admin-auth-tag" id="admin-auth-tag">🔒 Admin Mode</span>
+        <span class="admin-auth-tag" id="admin-auth-tag">Admin Mode</span>
         <button type="button" class="btn-refresh" id="btn-refresh-data" title="Refresh User Data">
-          🔄 Refresh
+          Refresh
         </button>
         <button type="button" class="btn-admin-lock" id="btn-admin-lock" title="Lock Admin Panel">
-          🔒 Lock
+          Lock Panel
         </button>
       </div>
     </header>
 
-    <!-- ADMIN AUTH GATE (PIN & Email Login) -->
+    <!-- ADMIN AUTH GATE (Server Authenticated) -->
     <div class="admin-gate-overlay" id="admin-gate-overlay">
       <div class="admin-gate-box">
-        <div class="gate-icon">🔐</div>
         <h2>Owner Admin Access</h2>
-        <p class="gate-sub">Enter your secret Admin PIN or sign in with your admin credentials to access user management.</p>
+        <p class="gate-sub">Sign in with your verified administrator credentials to access the user control dashboard.</p>
 
-        <!-- Tab Switcher -->
-        <div class="gate-tabs">
-          <button type="button" class="gate-tab active" id="tab-email">Admin Login</button>
-          <button type="button" class="gate-tab" id="tab-pin">Secret PIN</button>
-        </div>
-
-        <!-- EMAIL LOGIN FORM (DEFAULT) -->
+        <!-- SERVER-AUTHENTICATED ADMIN LOGIN FORM -->
         <form id="form-admin-email" class="gate-form">
           <div class="input-group">
             <label for="admin-email-input">Admin Email</label>
-            <input type="email" id="admin-email-input" placeholder="Enter admin email" autocomplete="username" autofocus required>
+            <input type="email" id="admin-email-input" placeholder="admin@example.com" autocomplete="username" autofocus required>
           </div>
           <div class="input-group">
             <label for="admin-password-input">Admin Password</label>
-            <input type="password" id="admin-password-input" placeholder="Enter admin password" autocomplete="current-password" required>
+            <input type="password" id="admin-password-input" placeholder="Enter password" autocomplete="current-password" required>
           </div>
           <button type="submit" class="btn-gate-submit" id="btn-email-submit">Sign In as Admin →</button>
-        </form>
-
-        <!-- PIN FORM -->
-        <form id="form-admin-pin" class="gate-form" style="display: none;">
-          <div class="input-group">
-            <label for="admin-pin-input">Admin Passcode / PIN</label>
-            <input type="password" id="admin-pin-input" placeholder="Enter PIN (Default: 9663)" autocomplete="current-password" required>
-          </div>
-          <button type="submit" class="btn-gate-submit" id="btn-pin-submit">Unlock Dashboard →</button>
-          <div class="gate-hint">💡 Default PIN is <code>9663</code> (Change anytime in dashboard)</div>
         </form>
 
         <div id="gate-error" class="gate-error" style="display: none;"></div>
@@ -85,7 +67,6 @@
       <!-- STATS METRIC CARDS -->
       <section class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon icon-users">👥</div>
           <div class="stat-info">
             <span class="stat-label">Total Users</span>
             <span class="stat-value" id="stat-total-users">0</span>
@@ -93,25 +74,22 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon icon-zero">🚨</div>
           <div class="stat-info">
-            <span class="stat-label">0 Credits (Needs Top-up)</span>
+            <span class="stat-label">Zero Balance</span>
             <span class="stat-value text-danger" id="stat-zero-credits">0</span>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon icon-credits">⚡</div>
           <div class="stat-info">
-            <span class="stat-label">Active Credits in System</span>
+            <span class="stat-label">System Credits</span>
             <span class="stat-value text-accent" id="stat-total-credits">0</span>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon icon-paying">💎</div>
           <div class="stat-info">
-            <span class="stat-label">Users With Credits</span>
+            <span class="stat-label">Active Users</span>
             <span class="stat-value text-success" id="stat-active-users">0</span>
           </div>
         </div>
@@ -121,12 +99,12 @@
       <section class="quick-topup-section">
         <div class="quick-topup-card">
           <div class="topup-header">
-            <h3>⚡ Quick Credit Grant</h3>
+            <h3>Quick Credit Grant</h3>
             <p>Add credits directly to any customer when they pay you on WhatsApp.</p>
           </div>
           <form id="form-direct-topup" class="topup-form">
             <div class="form-row">
-              <input type="email" id="direct-email-input" placeholder="Customer's Email (e.g. user@gmail.com)" required>
+              <input type="email" id="direct-email-input" placeholder="Customer email (e.g. user@gmail.com)" required>
               <div class="amount-presets">
                 <button type="button" class="btn-preset" data-amount="5">+5</button>
                 <button type="button" class="btn-preset active" data-amount="10">+10</button>
@@ -134,7 +112,7 @@
                 <button type="button" class="btn-preset" data-amount="50">+50</button>
               </div>
               <input type="number" id="direct-amount-input" min="1" max="1000" value="10" title="Custom Amount">
-              <button type="submit" class="btn-grant-credits" id="btn-grant-submit">✓ Review & Approve</button>
+              <button type="submit" class="btn-grant-credits" id="btn-grant-submit">Review & Approve</button>
             </div>
             <div class="topup-live-calc" id="topup-live-calc">
               <span class="calc-tag">Remaining: <b id="calc-preview-remaining">--</b></span>
@@ -149,7 +127,6 @@
       <section class="users-section">
         <div class="section-toolbar">
           <div class="search-wrap">
-            <span class="search-icon">🔍</span>
             <input type="text" id="user-search-input" placeholder="Search users by email...">
             <button type="button" id="btn-clear-search" class="btn-clear-search" style="display: none;">✕</button>
           </div>
@@ -183,14 +160,15 @@
         </div>
       </section>
 
-      <!-- ADMIN SETTINGS & PIN MODIFICATION -->
+      <!-- ADMIN SETTINGS & SECURITY NOTE -->
       <section class="admin-footer-settings">
         <div class="settings-card">
-          <h4>⚙️ Admin Security Settings</h4>
-          <div class="settings-row">
-            <span>Change Secret Admin PIN:</span>
-            <input type="password" id="input-new-pin" placeholder="New PIN (min 4 chars)">
-            <button type="button" class="btn-small" id="btn-update-pin">Update PIN</button>
+          <h4>Admin Security & Protection</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            Admin authentication is protected with salted PBKDF2 cryptography and rate-limited against brute force attacks.
+          </p>
+          <div style="font-size: 0.8rem; color: #8b9bb4; font-family: var(--font-mono); background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px;">
+            To rotate password: run <code>node hash_password.js "YourNewPassword"</code> and update <code>ADMIN_PASSWORD_HASH</code> in <code>.env</code>.
           </div>
         </div>
       </section>
@@ -200,7 +178,6 @@
     <div class="modal-overlay" id="credit-approval-modal" style="display: none;">
       <div class="approval-modal-box">
         <div class="approval-header">
-          <div class="approval-icon" id="approve-icon">⚡</div>
           <div>
             <h3 id="approve-modal-title">Confirm Credit Update</h3>
             <p class="approval-sub">Please review the calculation before approving:</p>
@@ -231,7 +208,7 @@
 
         <div class="approval-footer">
           <button type="button" class="btn-cancel-approval" id="btn-cancel-approval">Cancel</button>
-          <button type="button" class="btn-approve-credit" id="btn-confirm-approval">✓ Approve & Add Credits</button>
+          <button type="button" class="btn-approve-credit" id="btn-confirm-approval">Approve & Add Credits</button>
         </div>
       </div>
     </div>

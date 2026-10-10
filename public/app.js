@@ -365,7 +365,7 @@ const VocalDspEngine = {
     if (!isEnabled) {
       this.dryGain.gain.setTargetAtTime(1.0, now, 0.02);
       this.wetGain.gain.setTargetAtTime(0.0, now, 0.02);
-      if (dom.exportAudioModeTag) dom.exportAudioModeTag.textContent = '🎙️ Audio: Original Track';
+      if (dom.exportAudioModeTag) dom.exportAudioModeTag.textContent = 'Audio: Original Track';
     } else {
       const dryVal = Math.max(0, 1.0 - intensity);
       const wetVal = intensity * 1.35; // Boost perceived volume of differential track
@@ -377,7 +377,7 @@ const VocalDspEngine = {
         this.bassGain.gain.setTargetAtTime(bassVal, now, 0.02);
       }
       if (dom.exportAudioModeTag) {
-        dom.exportAudioModeTag.textContent = `🎙️ Audio: Karaoke Filter (${state.vocalCutIntensity}%)`;
+        dom.exportAudioModeTag.textContent = `Audio: Karaoke Filter (${state.vocalCutIntensity}%)`;
       }
     }
   },
@@ -558,7 +558,7 @@ function renderCanvasFrame(t) {
     ctx.textBaseline = 'middle';
     ctx.font = '600 44px "Outfit", sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.fillText('🎤 1080p Duet Karaoke Canvas Ready', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 25);
+    ctx.fillText('1080p Duet Karaoke Canvas Ready', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 25);
     ctx.font = '400 28px "Outfit", sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.fillText('Upload an audio file or paste a YouTube song to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 35);
@@ -860,7 +860,7 @@ function generateMelodicDuetCues(title, totalDuration) {
     const group = i % 3;
     const tag = group === 0 ? '[1]' : (group === 1 ? '[2]' : '[3]');
     const role = group === 0 ? 'Male Voice Melody' : (group === 1 ? 'Female Voice Melody' : 'Both Singing in Harmony');
-    cues.push(`${tag} [${fmt(startSec)} - ${fmt(endSec)}] 🎵 ${title} - ${role} (${i + 1})`);
+    cues.push(`${tag} [${fmt(startSec)} - ${fmt(endSec)}] ${title} - ${role} (${i + 1})`);
   }
 
   return cues.join('\n');
@@ -929,7 +929,7 @@ Remaining lines: only the timestamped duet karaoke lines.`;
 async function runOneClickAutoDuet() {
   // STRICT AUTH GUARD: Must be signed in to generate songs
   if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
-    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to generate karaoke songs!');
+    window.KaraokeAuth.openAuthModal('signin', 'Sign In Required: You must be signed in to generate karaoke songs!');
     return;
   }
 
@@ -944,10 +944,10 @@ async function runOneClickAutoDuet() {
   let lyrics = '';
   let language = 'Duet Song';
 
-  setAutopilotStep(1, '🎵 1/4: Ingesting audio track & preparing analysis...');
+  setAutopilotStep(1, '[1/4] Ingesting audio track & preparing analysis...');
   if (dom.btnRunAutopilot) {
     dom.btnRunAutopilot.disabled = true;
-    dom.btnRunAutopilot.innerHTML = '<span>⏳ Processing AI Duet in One Go...</span>';
+    dom.btnRunAutopilot.innerHTML = '<span>Processing Duet Karaoke Video...</span>';
   }
 
   try {
@@ -984,8 +984,8 @@ async function runOneClickAutoDuet() {
 
       // Step 2: On-device client AI / LRCLIB lyrics search (Zero 4.5MB upload limit!)
       setAutopilotStep(2, apiKey
-        ? '🧠 2/4: Gemini AI detecting singing language & separating Male [1] / Female [2] / Duet [3]...'
-        : '🌐 2/4: Searching synchronized lyrics database & assigning Male [1] / Female [2]...'
+        ? '[2/4] Detecting singing language & separating Male [1] / Female [2] / Duet [3]...'
+        : '[2/4] Searching synchronized lyrics database & assigning Male [1] / Female [2]...'
       );
 
       const cleanSearchTitle = title
@@ -1050,7 +1050,7 @@ async function runOneClickAutoDuet() {
       const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
       if (isLocalHost) {
-        setAutopilotStep(2, '⚡ 2/4: Ingesting YouTube audio stream & analyzing voices locally...');
+        setAutopilotStep(2, '[2/4] Ingesting YouTube audio stream & analyzing voices locally...');
         const res = await fetch('/api/auto-duet', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1079,7 +1079,7 @@ async function runOneClickAutoDuet() {
         dom.audioLoadedCard.style.display = 'flex';
       } else {
         // Vercel / Cloud Mode: Use oEmbed and direct lyrics search
-        setAutopilotStep(2, '🌐 2/4: Fetching YouTube metadata and synchronized lyrics...');
+        setAutopilotStep(2, '[2/4] Fetching YouTube metadata and synchronized lyrics...');
         let ytTitle = 'YouTube Duet';
         try {
           const oeRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
@@ -1133,7 +1133,7 @@ async function runOneClickAutoDuet() {
     }
 
     // Step 3: Populate studio state
-    setAutopilotStep(3, `📝 3/4: Detected "${language}"! Arranging anti-overlap 5-section karaoke layout...`);
+    setAutopilotStep(3, `[3/4] Detected "${language}": Arranging 5-section karaoke layout...`);
 
     if (lyrics) {
       dom.lyricsTextarea.value = lyrics;
@@ -1141,7 +1141,7 @@ async function runOneClickAutoDuet() {
     }
 
     if (dom.detectedLangBadge) {
-      dom.detectedLangBadge.textContent = `🌐 ${language} (Male [1] & Female [2] Assigned)`;
+      dom.detectedLangBadge.textContent = `${language} (Male [1] & Female [2] Assigned)`;
       dom.detectedLangBadge.style.display = 'inline-flex';
     }
 
@@ -1150,7 +1150,7 @@ async function runOneClickAutoDuet() {
     const shouldAutoRender = dom.chkAutoRenderVideo ? dom.chkAutoRenderVideo.checked : true;
 
     if (shouldAutoRender && state.audioElement.src) {
-      setAutopilotStep(4, '🎬 4/4: Auto-Rendering 1080p Universal MP4 Video in one go...');
+      setAutopilotStep(4, '[4/4] Auto-Rendering 1080p MP4 Video...');
       await new Promise(r => setTimeout(r, 600));
 
       if (state.ffmpegAvailable) {
@@ -1159,19 +1159,19 @@ async function runOneClickAutoDuet() {
         await renderVideoLive();
       }
 
-      setAutopilotStep(5, '🎉 Complete! Your 1080p Duet Karaoke Video is ready to watch & download!');
+      setAutopilotStep(5, 'Complete: Your 1080p Duet Karaoke Video is ready for download.');
     } else {
-      setAutopilotStep(5, `✨ Complete! Lyrics, Male/Female separation and timestamps generated for "${title}"!`);
+      setAutopilotStep(5, `Complete: Lyrics, Male/Female separation, and timestamps generated for "${title}".`);
     }
 
   } catch (err) {
-    console.error('[1-Click Auto Duet Error]', err);
-    alert(`1-Click Auto Duet: ${err.message}`);
-    setAutopilotStep(0, `❌ ${err.message}`);
+    console.error('[Auto Duet Error]', err);
+    alert(`Auto Duet: ${err.message}`);
+    setAutopilotStep(0, err.message);
   } finally {
     if (dom.btnRunAutopilot) {
       dom.btnRunAutopilot.disabled = false;
-      dom.btnRunAutopilot.innerHTML = '<span>🚀 1-Click Auto Duet: Lyrics + Voices + Video</span>';
+      dom.btnRunAutopilot.innerHTML = '<span>Generate Duet Karaoke Video</span>';
     }
   }
 }
@@ -1209,8 +1209,14 @@ function renderTapSyncList() {
   state.tapSyncLines.forEach((item, idx) => {
     const div = document.createElement('div');
     div.className = `tap-line-item ${idx === state.tapSyncIndex ? 'active' : ''} ${item.start !== null ? 'synced' : ''}`;
-    const timeStr = item.start !== null ? `[${TimeUtil.toDisplay(item.start)} - ${TimeUtil.toDisplay(item.end || item.start + 3)}]` : '[Not set]';
-    div.innerHTML = `<span>${item.text}</span><span style="font-family: var(--font-mono); color: #00ffff;">${timeStr}</span>`;
+    const spanText = document.createElement('span');
+    spanText.textContent = item.text || '';
+    const spanTime = document.createElement('span');
+    spanTime.style.fontFamily = 'var(--font-mono)';
+    spanTime.style.color = '#00ffff';
+    spanTime.textContent = timeStr;
+    div.appendChild(spanText);
+    div.appendChild(spanTime);
     dom.tapSyncLinesList.appendChild(div);
   });
 }
@@ -1281,7 +1287,7 @@ const presentRenderedVideo = ({ url, filename, description }) => {
 async function renderVideoLive() {
   // STRICT AUTH GUARD: Must be signed in to render video
   if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
-    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs!');
+    window.KaraokeAuth.openAuthModal('signin', 'Sign In Required: You must be signed in to render karaoke songs!');
     return;
   }
 
@@ -1300,7 +1306,7 @@ async function renderVideoLive() {
   if (dom.downloadBanner) dom.downloadBanner.style.display = 'none';
 
   dom.renderProgressCard.style.display = 'flex';
-  dom.renderStatusText.textContent = '🎬 Rendering video live while playing...';
+  dom.renderStatusText.textContent = 'Rendering video live while playing...';
   dom.renderPercentageText.textContent = '0%';
   dom.progressBarFill.style.width = '0%';
   dom.renderEta.textContent = 'Playing canvas sweeps live. Download button will appear on completion.';
@@ -1376,7 +1382,7 @@ async function renderVideoLive() {
 
     dom.renderPercentageText.textContent = '100%';
     dom.progressBarFill.style.width = '100%';
-    dom.renderStatusText.textContent = '⚡ Finalizing canvas video output...';
+    dom.renderStatusText.textContent = 'Finalizing canvas video output...';
 
     const recordedBlob = new Blob(state.recordedChunks, { type: mimeType });
     let finalVideoUrl = null;
@@ -1385,7 +1391,7 @@ async function renderVideoLive() {
     // Convert via server FFmpeg to Universal MP4 if available
     if (state.ffmpegAvailable && recordedBlob.size > 0) {
       try {
-        dom.renderStatusText.textContent = '🎬 Generating Universal MP4 (iPhone, Android, PC & TV)...';
+        dom.renderStatusText.textContent = 'Generating Universal MP4 video...';
         const videoBase64 = await readFileAsBase64(recordedBlob);
         const resp = await fetch('/api/convert-recording', {
           method: 'POST',
@@ -1442,7 +1448,7 @@ async function renderVideoLive() {
 async function renderVideoWithFfmpeg() {
   // STRICT AUTH GUARD: Must be signed in to render video
   if (window.KaraokeAuth && !window.KaraokeAuth.getCurrentUser()) {
-    window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs!');
+    window.KaraokeAuth.openAuthModal('signin', 'Sign In Required: You must be signed in to render karaoke songs!');
     return;
   }
 
@@ -1460,7 +1466,7 @@ async function renderVideoWithFfmpeg() {
   }
 
   dom.renderProgressCard.style.display = 'flex';
-  dom.renderStatusText.textContent = '🎬 Generating Universal MP4 (iPhone, iPad, Android, Tab, Laptop & TV compatible)...';
+  dom.renderStatusText.textContent = 'Generating Universal MP4 video...';
   dom.renderPercentageText.textContent = 'Encoding H.264 High 4.1 + Faststart...';
   dom.progressBarFill.style.width = '65%';
   dom.renderEta.textContent = 'Rendering directly via server FFmpeg... Download button will be provided on completion.';
@@ -1621,7 +1627,7 @@ function initEventListeners() {
     }
     const user = window.KaraokeAuth.getCurrentUser();
     if (!user) {
-      window.KaraokeAuth.openAuthModal('signin', '🔒 Sign In Required: You must be signed in to render karaoke songs!');
+      window.KaraokeAuth.openAuthModal('signin', 'Sign In Required: You must be signed in to render karaoke songs!');
       return false;
     }
     return window.KaraokeAuth.guardCreditAction(fn);

@@ -1,3 +1,3 @@
 # Duet Karaoke Maker (Lightweight Web Edition)
-# Runs with standard library only (http.server, json, subprocess, urllib).
-# No external pip dependencies required.
+# Optional YouTube audio extraction backend
+yt-dlp>=2024.08.0
