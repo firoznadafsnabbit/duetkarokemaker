@@ -12,7 +12,6 @@ const SUPABASE_CONFIG = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kdmdtbmlzd2ZwYWh3a3F3dGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzE4MTksImV4cCI6MjEwNzEwNzgxOX0.dl3gytRtsokArFxN_VH2nMABfAF35757ghOnm-dYESs',
   whatsappNumber: '919663396058',
   upiId: 'feroznadaf13008@ybl',
-  tokenRate: 5,        // ₹5 per token
   tokensPerVideo: 2,   // 2 tokens needed to render 1 video
   freeCredits: 6       // 6 tokens bonus (3 videos)
 };
@@ -215,6 +214,27 @@ function setAuthTab(tab) {
   }
 }
 
+// Token Package Tiers: 10 => 49rs, 20 => 99rs, 45 => 199rs, 100 => 399rs
+const TOKEN_PACKAGES = {
+  10: 49,
+  20: 99,
+  45: 199,
+  100: 399
+};
+
+function calculateTokenPrice(tokens) {
+  const count = parseInt(tokens, 10);
+  if (isNaN(count) || count <= 0) return 0;
+  if (TOKEN_PACKAGES[count]) {
+    return TOKEN_PACKAGES[count];
+  }
+  if (count <= 10) return Math.max(10, Math.round(count * 4.9));
+  if (count <= 20) return Math.round(49 + ((count - 10) * 5.0));
+  if (count <= 45) return Math.round(99 + ((count - 20) * 4.0));
+  if (count <= 100) return Math.round(199 + ((count - 45) * 3.63));
+  return Math.round(count * 3.99);
+}
+
 let selectedTokens = 20;
 
 function selectTokens(tokens) {
@@ -244,7 +264,7 @@ function updateTokenRechargeUI() {
   });
 
   const videosCount = Math.floor(selectedTokens / SUPABASE_CONFIG.tokensPerVideo);
-  const totalPrice = selectedTokens * SUPABASE_CONFIG.tokenRate;
+  const totalPrice = calculateTokenPrice(selectedTokens);
   const userEmail = currentUser?.email || 'my-account';
 
   // Update order summary card
@@ -283,7 +303,7 @@ function updateTokenRechargeUI() {
 *Login Email:* ${userEmail}
 *Tokens Needed:* ${selectedTokens} Tokens
 *Videos to Render:* ${videosCount} Videos (2 tokens/video)
-*Total Amount:* ₹${totalPrice} (₹5/token)
+*Total Amount:* ₹${totalPrice}
 *UPI ID:* ${SUPABASE_CONFIG.upiId}
 
 *UPI Payment Link:*
