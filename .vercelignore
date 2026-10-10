@@ -1,0 +1,13 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Local Python backend (prevent unnecessary Python builds on Vercel)
+server.py
+requirements.txt
+__pycache__/
+
+# Test scripts
+scratch/
+test_server_security.js
