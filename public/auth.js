@@ -315,12 +315,8 @@ I have initiated / completed the payment. Please credit ${selectedTokens} tokens
   }
 }
 
-function openOutOfCreditsModal() {
-  const modal = document.getElementById('credits-contact-modal');
-  if (!modal) return;
-
-  updateTokenRechargeUI();
-  modal.style.display = 'flex';
+function openOutOfCreditsModal(reason = 'out_of_tokens') {
+  window.location.href = `/pricing?reason=${encodeURIComponent(reason)}`;
 }
 
 function closeOutOfCreditsModal() {
@@ -795,9 +791,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Recharge Modal Listeners
   document.getElementById('btn-close-contact-modal')?.addEventListener('click', closeOutOfCreditsModal);
 
-  // Allow clicking on header credits pill to recharge tokens anytime
-  document.getElementById('credits-pill')?.addEventListener('click', () => {
-    openOutOfCreditsModal();
+  // Allow clicking on header credits pill to recharge tokens anytime - redirects to pricing page
+  document.getElementById('credits-pill')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openOutOfCreditsModal('user_click');
   });
 
   // Modal backdrop click to close

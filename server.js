@@ -449,7 +449,7 @@ const serveStatic = (req, res, pathname) => {
     safePath = '/terms.html';
   } else if (safePath === '/refund' || safePath === '\\refund') {
     safePath = '/refund.html';
-  } else if (safePath === '/pricing' || safePath === '\\pricing') {
+  } else if (safePath === '/pricing' || safePath === '\\pricing' || safePath === '/purchase' || safePath === '\\purchase') {
     safePath = '/pricing.html';
   } else if (safePath === '/contact' || safePath === '\\contact') {
     safePath = '/contact.html';

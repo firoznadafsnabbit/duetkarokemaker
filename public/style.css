@@ -1823,6 +1823,7 @@ input[type="color"]::-webkit-color-swatch {
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-decoration: none;
 }
 
 .credits-pill.good {
