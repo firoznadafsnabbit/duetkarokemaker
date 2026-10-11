@@ -402,10 +402,13 @@ async function handleSignUp(e) {
   }
 
   try {
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Creating Account...'; }
+    const redirectUrl = window.location.origin;
     const { data, error } = await supabaseClient.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: redirectUrl
+      }
     });
     if (error) throw error;
 
@@ -631,7 +634,14 @@ async function handleGateSignUp(e) {
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="btn-spinner"></span><span>Creating Account...</span>';
     }
-    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    const redirectUrl = window.location.origin;
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl
+      }
+    });
     if (error) throw error;
 
     if (data.user && data.session) {
@@ -702,12 +712,29 @@ async function guardCreditAction(actionCallback) {
 window.addEventListener('DOMContentLoaded', async () => {
   initSupabase();
 
+  // Detect email confirmation error in URL hash
+  if (window.location.hash) {
+    try {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const errorDesc = hashParams.get('error_description');
+      if (errorDesc) {
+        const decoded = decodeURIComponent(errorDesc.replace(/\+/g, ' '));
+        showGateError('Confirmation link error: ' + decoded);
+        showAuthError('Confirmation link error: ' + decoded);
+      }
+    } catch (_) {}
+  }
+
   if (supabaseClient) {
     try {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session?.user) {
         currentUser = session.user;
         await loadUserProfile(currentUser);
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          showGateNotice('🎉 Email verified successfully! Your account is active with 6 Free Tokens.');
+          try { window.history.replaceState(null, '', window.location.pathname); } catch (_) {}
+        }
       }
       syncAuthGateState();
 
@@ -716,6 +743,9 @@ window.addEventListener('DOMContentLoaded', async () => {
           currentUser = session.user;
           await loadUserProfile(currentUser);
           syncAuthGateState();
+          if (window.location.hash && window.location.hash.includes('access_token')) {
+            try { window.history.replaceState(null, '', window.location.pathname); } catch (_) {}
+          }
         } else {
           currentUser = null;
           currentCredits = 0;

@@ -5,7 +5,7 @@ export default function handler(req, res) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   const origin = req.headers.origin || '';
-  if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+  if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.endsWith('.vercel.app')) {
     if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');

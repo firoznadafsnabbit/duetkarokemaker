@@ -4,9 +4,9 @@ export default async function handler(req, res) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-  // Restrict CORS: Allow same-origin or localhost
+  // Restrict CORS: Allow same-origin, localhost, or vercel.app
   const origin = req.headers.origin || '';
-  if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+  if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.endsWith('.vercel.app')) {
     if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
