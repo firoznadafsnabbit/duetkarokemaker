@@ -43,7 +43,12 @@ const state = {
   ffmpegAvailable: false,
   isRendering: false,
   mediaRecorder: null,
-  recordedChunks: []
+  recordedChunks: [],
+
+  // Video Download & Token State (2 tokens deducted strictly on download)
+  currentRenderPaid: false,
+  renderedVideoUrl: null,
+  renderedVideoFilename: 'duet_karaoke_1080p.mp4'
 };
 
 // ==========================================
@@ -668,6 +673,7 @@ function updateTimeDisplay() {
 // 8. AUDIO ENGINE & PLAYBACK CONTROLS
 // ==========================================
 function loadAudioFile(file) {
+  state.currentRenderPaid = false;
   state.audioFile = file;
   state.audioElement.src = URL.createObjectURL(file);
   dom.audioFilename.textContent = file.name;
@@ -1263,16 +1269,119 @@ function applyTapSyncToEditor() {
 // ==========================================
 // 11. UNIFIED VIDEO PRESENTATION & EXPORT (DRY)
 // ==========================================
+function triggerDirectFileDownload(url, filename) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || 'duet_karaoke_1080p.mp4';
+  link.rel = 'noopener';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    try {
+      document.body.removeChild(link);
+    } catch (_) {}
+  }, 400);
+}
+
+async function handleDownloadVideoClick(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  const url = state.renderedVideoUrl || dom.btnDownloadVideo?.getAttribute('data-download-url') || dom.btnDownloadVideo?.href;
+  const filename = state.renderedVideoFilename || dom.btnDownloadVideo?.getAttribute('data-download-filename') || dom.btnDownloadVideo?.download || 'duet_karaoke_1080p.mp4';
+
+  if (!url || url === '#' || url.endsWith('#')) {
+    alert('Please render your karaoke video first before downloading.');
+    return;
+  }
+
+  // If already paid for this exact rendered file, download directly without re-charging
+  if (state.currentRenderPaid) {
+    triggerDirectFileDownload(url, filename);
+    return;
+  }
+
+  // 1. Strict Auth Guard: User must be signed in to download
+  if (!window.KaraokeAuth || !window.KaraokeAuth.getCurrentUser()) {
+    if (window.KaraokeAuth) {
+      window.KaraokeAuth.openAuthModal('signin', 'Sign In Required: Sign in or create an account to download your 1080p Duet Karaoke video (2 tokens).');
+    } else {
+      alert('Authentication is initializing. Please wait a moment...');
+    }
+    return;
+  }
+
+  // 2. Strict Token Check: User must have at least 2 tokens
+  const currentTokens = window.KaraokeAuth.getCredits ? window.KaraokeAuth.getCredits() : 0;
+  if (currentTokens < 2) {
+    if (window.KaraokeAuth.openOutOfCreditsModal) {
+      window.KaraokeAuth.openOutOfCreditsModal('out_of_tokens');
+    } else {
+      window.location.href = '/pricing?reason=out_of_tokens';
+    }
+    return;
+  }
+
+  // 3. Deduct exactly 2 tokens on download
+  const btn = dom.btnDownloadVideo;
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.7';
+  }
+
+  try {
+    const deducted = await window.KaraokeAuth.deductSongCredit(2);
+    if (!deducted) {
+      if (window.KaraokeAuth.openOutOfCreditsModal) {
+        window.KaraokeAuth.openOutOfCreditsModal('out_of_tokens');
+      } else {
+        window.location.href = '/pricing?reason=out_of_tokens';
+      }
+      return;
+    }
+
+    // Mark current render as paid so accidental duplicate clicks don't double charge
+    state.currentRenderPaid = true;
+
+    // Trigger file download
+    triggerDirectFileDownload(url, filename);
+
+    // Update download banner status
+    if (dom.downloadFilenameSub) {
+      dom.downloadFilenameSub.innerHTML = `✓ <strong>2 Tokens Deducted</strong> — Downloading "<strong>${filename}</strong>" now!`;
+    }
+  } catch (err) {
+    console.error('[Download Error]', err);
+    alert('Failed to process download: ' + (err.message || 'Unknown error'));
+  } finally {
+    if (btn) {
+      btn.innerHTML = originalHtml;
+      btn.style.pointerEvents = '';
+      btn.style.opacity = '';
+    }
+  }
+}
+
 const presentRenderedVideo = ({ url, filename, description }) => {
   dom.renderProgressCard.style.display = 'none';
   dom.downloadBanner.style.display = 'flex';
 
+  state.currentRenderPaid = false;
+  state.renderedVideoUrl = url;
+  state.renderedVideoFilename = filename || 'duet_karaoke_1080p.mp4';
+
   if (dom.downloadFilenameSub) {
-    dom.downloadFilenameSub.textContent = description || `Rendering complete for "${filename}"! Click below to download.`;
+    dom.downloadFilenameSub.innerHTML = description || `Rendering complete for "<strong>${filename}</strong>"! (2 Tokens deducted on download)`;
   }
 
   dom.btnDownloadVideo.href = url;
   dom.btnDownloadVideo.download = filename;
+  dom.btnDownloadVideo.setAttribute('data-download-url', url);
+  dom.btnDownloadVideo.setAttribute('data-download-filename', filename);
   dom.btnDownloadVideo.style.display = 'inline-flex';
 
   if (dom.renderedVideoPlayer && dom.renderedVideoWrapper) {
@@ -1300,6 +1409,7 @@ async function renderVideoLive() {
     return;
   }
 
+  state.currentRenderPaid = false;
   state.isRendering = true;
   if (dom.btnRenderLive) dom.btnRenderLive.disabled = true;
   if (dom.btnRenderUniversal) dom.btnRenderUniversal.disabled = true;
@@ -1465,6 +1575,7 @@ async function renderVideoWithFfmpeg() {
     return;
   }
 
+  state.currentRenderPaid = false;
   dom.renderProgressCard.style.display = 'flex';
   dom.renderStatusText.textContent = 'Generating Universal MP4 video...';
   dom.renderPercentageText.textContent = 'Encoding H.264 High 4.1 + Faststart...';
@@ -1528,6 +1639,7 @@ async function renderVideoWithFfmpeg() {
 // 13. UI EVENT BINDINGS (DRY)
 // ==========================================
 function parseAndUpdateLyrics() {
+  state.currentRenderPaid = false;
   state.lyricsRaw = dom.lyricsTextarea.value;
   state.segments = parseManualTimestamps(state.lyricsRaw);
   dom.parsedCountBadge.textContent = `${state.segments.length} lines parsed`;
@@ -1621,24 +1733,15 @@ function initEventListeners() {
   });
 
   const executeGuarded = (fn) => {
-    if (!window.KaraokeAuth) {
-      alert('Authentication service is initializing. Please wait a moment...');
-      return false;
-    }
-    const user = window.KaraokeAuth.getCurrentUser();
-    if (!user) {
-      window.KaraokeAuth.openAuthModal('signin', 'Sign In Required: You must be signed in to render karaoke songs!');
-      return false;
-    }
-    return window.KaraokeAuth.guardCreditAction(fn);
+    if (typeof fn === 'function') return fn();
   };
 
-  dom.btnRunAutopilot?.addEventListener('click', () => executeGuarded(runOneClickAutoDuet));
-  dom.btnFetchYt?.addEventListener('click', () => executeGuarded(runOneClickAutoDuet));
+  dom.btnRunAutopilot?.addEventListener('click', () => runOneClickAutoDuet());
+  dom.btnFetchYt?.addEventListener('click', () => runOneClickAutoDuet());
   dom.ytUrlInput?.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      executeGuarded(runOneClickAutoDuet);
+      runOneClickAutoDuet();
     }
   });
 
@@ -1716,23 +1819,25 @@ function initEventListeners() {
     }
   });
 
-  // Export Buttons (Guarded)
+  // Export Subtitle (.ASS - Free text export)
   dom.btnExportAss?.addEventListener('click', () => {
-    executeGuarded(() => {
-      const assContent = generateAssSubtitle();
-      const blob = new Blob([assContent], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'duet_karaoke.ass';
-      a.click();
-    });
+    const assContent = generateAssSubtitle();
+    const blob = new Blob([assContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'duet_karaoke.ass';
+    a.click();
   });
 
-  dom.btnRenderLive?.addEventListener('click', () => executeGuarded(renderVideoLive));
-  dom.btnRenderUniversal?.addEventListener('click', () => executeGuarded(renderVideoWithFfmpeg));
-  dom.btnRenderBrowser?.addEventListener('click', () => executeGuarded(renderVideoLive));
-  dom.btnRenderFfmpeg?.addEventListener('click', () => executeGuarded(renderVideoWithFfmpeg));
+  // Render Video Preview (100% free to render and preview; tokens are deducted ONLY on download!)
+  dom.btnRenderLive?.addEventListener('click', () => renderVideoLive());
+  dom.btnRenderUniversal?.addEventListener('click', () => renderVideoWithFfmpeg());
+  dom.btnRenderBrowser?.addEventListener('click', () => renderVideoLive());
+  dom.btnRenderFfmpeg?.addEventListener('click', () => renderVideoWithFfmpeg());
+
+  // Download Video (.MP4): Exactly 2 tokens deducted strictly upon hitting download
+  dom.btnDownloadVideo?.addEventListener('click', handleDownloadVideoClick);
 
   // Syntax Modal (DRY)
   const toggleSyntaxModal = (show) => { dom.syntaxModal.style.display = show ? 'flex' : 'none'; };

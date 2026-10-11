@@ -152,6 +152,31 @@ async function deductSongCredit(amount = SUPABASE_CONFIG.tokensPerVideo) {
 
   if (currentCredits < amount) return false;
 
+  // 1. Try atomic database RPC deduct_tokens first
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.rpc('deduct_tokens', { tokens_needed: amount });
+      if (!error && data) {
+        if (data.success) {
+          if (typeof data.credits === 'number') {
+            currentCredits = data.credits;
+          } else {
+            currentCredits = Math.max(0, currentCredits - amount);
+          }
+          updateAuthUI();
+          return true;
+        } else if (data.error === 'Insufficient credits') {
+          if (typeof data.credits === 'number') currentCredits = data.credits;
+          updateAuthUI();
+          return false;
+        }
+      }
+    } catch (rpcErr) {
+      console.warn('[Auth] RPC deduct_tokens attempt failed, falling back to direct table update:', rpcErr);
+    }
+  }
+
+  // 2. Direct profiles table update fallback
   const nextCredits = Math.max(0, currentCredits - amount);
   currentCredits = nextCredits;
   updateAuthUI();
@@ -353,7 +378,9 @@ async function handleSignIn(e) {
       const pendingFn = pendingGuardedAction;
       pendingGuardedAction = null;
       setTimeout(() => {
-        guardCreditAction(pendingFn);
+        if (typeof pendingFn === 'function') {
+          pendingFn();
+        }
       }, 350);
     }
   } catch (err) {
@@ -415,7 +442,9 @@ async function handleSignUp(e) {
         const pendingFn = pendingGuardedAction;
         pendingGuardedAction = null;
         setTimeout(() => {
-          guardCreditAction(pendingFn);
+          if (typeof pendingFn === 'function') {
+            pendingFn();
+          }
         }, 350);
       }
     } else {
@@ -671,32 +700,58 @@ function openKeySetupModal(reason = '') {
 }
 
 /**
- * Guard any song generation/render operation:
- * Checks if user is logged in and has >= 2 tokens (2 tokens per video).
- * If yes, executes callback and decrements 2 tokens.
- * If no, shows auth modal or recharge tokens modal.
+ * Guard studio actions that require authentication.
+ * Note: Tokens are NOT deducted here (editing lyrics, syncing, and rendering preview are 100% free).
+ * Tokens are strictly deducted only when the user clicks download (2 tokens per video).
  */
 async function guardCreditAction(actionCallback) {
-  // 1. Must be logged in: STRICT ENFORCEMENT - No song can be rendered without signing in!
   if (!currentUser) {
     pendingGuardedAction = actionCallback;
-    openAuthModal('signin', 'Sign In Required: You must sign in or create an account to render your karaoke video.');
+    openAuthModal('signin', 'Sign In Required: You must sign in or create an account to continue.');
     return false;
   }
 
-  // 2. Check tokens: 2 tokens required per video render
-  const requiredTokens = SUPABASE_CONFIG.tokensPerVideo;
-  if (currentCredits < requiredTokens) {
-    openOutOfCreditsModal();
-    return false;
-  }
-
-  // 3. User has enough tokens: execute action and deduct 2 tokens
   try {
-    const result = await actionCallback();
-    await deductSongCredit(requiredTokens);
-    return result;
+    if (typeof actionCallback === 'function') {
+      return await actionCallback();
+    }
+    return true;
   } catch (err) {
+    throw err;
+  }
+}
+
+/**
+ * Guard video download operation:
+ * Strictly checks that user is logged in and has >= 2 tokens.
+ * Deducts exactly 2 tokens upon download.
+ */
+async function guardDownloadAction(downloadCallback) {
+  if (!currentUser) {
+    pendingGuardedAction = () => guardDownloadAction(downloadCallback);
+    openAuthModal('signin', 'Sign In Required: Sign in or create an account to download your 1080p Duet Karaoke video (2 tokens).');
+    return false;
+  }
+
+  const requiredTokens = SUPABASE_CONFIG.tokensPerVideo || 2;
+  if (currentCredits < requiredTokens) {
+    openOutOfCreditsModal('out_of_tokens');
+    return false;
+  }
+
+  const deducted = await deductSongCredit(requiredTokens);
+  if (!deducted) {
+    openOutOfCreditsModal('out_of_tokens');
+    return false;
+  }
+
+  try {
+    if (typeof downloadCallback === 'function') {
+      return await downloadCallback();
+    }
+    return true;
+  } catch (err) {
+    console.error('[Download Guard Error]', err);
     throw err;
   }
 }
@@ -1055,6 +1110,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Export functions to window
   window.KaraokeAuth = {
     guardCreditAction,
+    guardDownloadAction,
     deductSongCredit,
     openAuthModal,
     openOutOfCreditsModal,
