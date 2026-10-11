@@ -12,6 +12,7 @@ const SUPABASE_CONFIG = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kdmdtbmlzd2ZwYWh3a3F3dGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzE4MTksImV4cCI6MjEwNzEwNzgxOX0.dl3gytRtsokArFxN_VH2nMABfAF35757ghOnm-dYESs',
   whatsappNumber: '919663396058',
   upiId: 'feroznadaf13008@ybl',
+  payeeName: 'ArmaanKaraoke',
   tokensPerVideo: 2,   // 2 tokens needed to render 1 video
   freeCredits: 6       // 6 tokens bonus (3 videos)
 };
@@ -284,32 +285,28 @@ function updateTokenRechargeUI() {
   if (currentTokensVal) currentTokensVal.textContent = currentCredits;
   if (currentVideosVal) currentVideosVal.textContent = Math.floor(currentCredits / SUPABASE_CONFIG.tokensPerVideo);
 
-  // Generate UPI Intent Pay URL
-  const payeeName = 'Duet Karaoke Maker';
-  const upiNote = encodeURIComponent(`Recharge ${selectedTokens} Tokens for ${userEmail}`);
-  const upiUri = `upi://pay?pa=${SUPABASE_CONFIG.upiId}&pn=${encodeURIComponent(payeeName)}&am=${totalPrice}&cu=INR&tn=${upiNote}`;
+  // Generate NPCI-compliant UPI Intent Pay URL
+  const formattedAmount = Number(totalPrice).toFixed(2);
+  const cleanNote = `Tokens_${selectedTokens}`;
+  const upiUri = `upi://pay?pa=${SUPABASE_CONFIG.upiId}&pn=${SUPABASE_CONFIG.payeeName}&am=${formattedAmount}&cu=INR&tn=${cleanNote}`;
 
   const intentPayBtn = document.getElementById('btn-upi-intent-pay');
   if (intentPayBtn) {
     intentPayBtn.href = upiUri;
   }
 
-  // Pre-formatted WhatsApp confirmation message with login email and payment link
+  // Pre-formatted WhatsApp confirmation message with login email and payment details
   const waBtn = document.getElementById('btn-contact-whatsapp');
   if (waBtn) {
     const waMessage = 
 `*Duet Karaoke Maker - Token Recharge Request*
 
 *Login Email:* ${userEmail}
-*Tokens Needed:* ${selectedTokens} Tokens
-*Videos to Render:* ${videosCount} Videos (2 tokens/video)
-*Total Amount:* ₹${totalPrice}
-*UPI ID:* ${SUPABASE_CONFIG.upiId}
+*Package Selected:* ${selectedTokens} Tokens (${videosCount} Full Videos)
+*Amount Payable:* ₹${totalPrice}
+*Paid to UPI ID:* ${SUPABASE_CONFIG.upiId}
 
-*UPI Payment Link:*
-${upiUri}
-
-I have initiated / completed the payment. Please credit ${selectedTokens} tokens to my account (${userEmail}). Thank you!`;
+Hi Armaan Karaoke Team, I have initiated payment of ₹${totalPrice} for ${selectedTokens} Tokens. Please verify and credit to my account (${userEmail}). Thank you!`;
 
     waBtn.href = `https://wa.me/${SUPABASE_CONFIG.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
   }

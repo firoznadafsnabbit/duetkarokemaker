@@ -75,8 +75,9 @@
         <!-- User Account Info & Current Balance -->
         <div class="recharge-account-card">
           <div class="recharge-acc-left">
-            <span class="account-card-label">Your Account:</span>
-            <span class="account-card-email" id="contact-user-email">Detecting session...</span>
+            <span class="account-card-label">Your Account Email:</span>
+            <input type="email" id="purchase-email-input" class="purchase-email-input" placeholder="Enter your email to receive tokens" autocomplete="email">
+            <span id="account-status-badge" style="display: none; font-size: 0.75rem; color: #10b981; font-weight: 700;">✓ Synced</span>
           </div>
           <div class="recharge-acc-right">
             <span class="account-card-label">Current Balance:</span>
@@ -152,16 +153,49 @@
           <p class="transparency-text">Zero subscription fees, zero auto-debit, zero expiry on tokens. 2 tokens consumed per full video render. Free refund or re-credit if any render fails technically.</p>
         </div>
 
-        <!-- UPI Payment Details -->
+        <!-- UPI Payment & Dynamic QR Code Section -->
         <div class="upi-payment-box">
           <div class="upi-box-header">
-            <span class="upi-title">Pay via UPI:</span>
-            <span class="upi-id-code" id="upi-id-display">feroznadaf13008@ybl</span>
-            <button type="button" class="btn-copy-chip" id="btn-copy-upi" aria-label="Copy UPI ID to clipboard">Copy UPI ID</button>
+            <div>
+              <span class="upi-title">Official Payee UPI ID:</span>
+              <span class="upi-id-code" id="upi-id-display">feroznadaf13008@ybl</span>
+            </div>
+            <div class="upi-copy-group">
+              <button type="button" class="btn-copy-chip" id="btn-copy-upi" aria-label="Copy UPI ID to clipboard">Copy UPI ID</button>
+              <button type="button" class="btn-copy-chip" id="btn-copy-amount" aria-label="Copy Payable Amount">Copy Amount</button>
+            </div>
           </div>
-          <a href="#" class="btn-upi-intent" id="btn-upi-intent-pay">
-            <span>⚡ Open UPI App (GPay / PhonePe / Paytm / BHIM)</span>
-          </a>
+
+          <!-- Dynamic Live QR Code Card (Auto-generated for selected package) -->
+          <div class="upi-qr-card" id="upi-qr-card">
+            <div class="upi-qr-wrapper">
+              <img id="upi-qr-image" src="" alt="Dynamic UPI QR Code" width="160" height="160">
+            </div>
+            <div class="upi-qr-info">
+              <div class="qr-amount-badge">Pay Exactly <span id="qr-amount-text">₹99</span></div>
+              <p class="qr-subtext">Scan using <strong>Google Pay</strong>, <strong>PhonePe</strong>, <strong>Paytm</strong>, or <strong>BHIM</strong></p>
+              <span class="qr-verified-tag">✓ Verified UPI ID • 100% Instant Delivery</span>
+            </div>
+          </div>
+
+          <!-- Direct Mobile One-Tap Pay Buttons -->
+          <div class="upi-apps-section">
+            <div class="upi-apps-label">Or Tap to Pay Directly with UPI App on Mobile:</div>
+            <div class="upi-apps-grid">
+              <button type="button" class="btn-app-pay universal" id="btn-pay-universal">
+                <span>⚡ Pay with Any UPI App</span>
+              </button>
+              <button type="button" class="btn-app-pay gpay" id="btn-pay-gpay">
+                <span>🟢 Google Pay (GPay)</span>
+              </button>
+              <button type="button" class="btn-app-pay phonepe" id="btn-pay-phonepe">
+                <span>🟣 PhonePe</span>
+              </button>
+              <button type="button" class="btn-app-pay paytm" id="btn-pay-paytm">
+                <span>🔵 Paytm</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- WhatsApp Payment Request Button -->

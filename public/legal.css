@@ -961,26 +961,175 @@ textarea.form-control-legal {
   border-color: var(--brand-cyan);
 }
 
-.btn-upi-intent {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: linear-gradient(135deg, rgba(0, 242, 254, 0.12), rgba(79, 172, 254, 0.12));
+.purchase-email-input {
+  background: #080c14;
   border: 1px solid rgba(0, 242, 254, 0.3);
   border-radius: var(--radius-sm);
   color: var(--brand-cyan);
-  font-size: 0.88rem;
-  font-weight: 700;
-  padding: 12px 18px;
-  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  width: 250px;
+  max-width: 100%;
+  outline: none;
   transition: all 0.2s ease;
 }
 
-.btn-upi-intent:hover {
-  background: linear-gradient(135deg, rgba(0, 242, 254, 0.22), rgba(79, 172, 254, 0.22));
-  color: #ffffff;
+.purchase-email-input:focus {
   border-color: var(--brand-cyan);
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+}
+
+.upi-copy-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upi-qr-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #080c14;
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin: 4px 0;
+  transition: all 0.3s ease;
+}
+
+.upi-qr-card.highlight-pulse {
+  border-color: var(--brand-cyan);
+  box-shadow: 0 0 24px rgba(0, 242, 254, 0.5);
+}
+
+.upi-qr-wrapper {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  min-width: 160px;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.upi-qr-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.upi-qr-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qr-amount-badge {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--brand-green);
+}
+
+.qr-subtext {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.qr-verified-tag {
+  font-size: 0.76rem;
+  color: var(--brand-cyan);
+  font-weight: 700;
+  background: rgba(0, 242, 254, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.upi-apps-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.upi-apps-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.upi-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.btn-app-pay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.15s ease;
+}
+
+.btn-app-pay.universal {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.18), rgba(79, 172, 254, 0.18));
+  color: var(--brand-cyan);
+  border-color: rgba(0, 242, 254, 0.4);
+  font-size: 0.92rem;
+  padding: 12px 16px;
+}
+
+.btn-app-pay.universal:hover {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.3), rgba(79, 172, 254, 0.3));
+  color: #ffffff;
+}
+
+.btn-app-pay.gpay {
+  background: #1e293b;
+  color: #34d399;
+}
+
+.btn-app-pay.gpay:hover {
+  background: #28374d;
+  border-color: #34d399;
+}
+
+.btn-app-pay.phonepe {
+  background: #1e293b;
+  color: #c084fc;
+}
+
+.btn-app-pay.phonepe:hover {
+  background: #28374d;
+  border-color: #c084fc;
+}
+
+.btn-app-pay.paytm {
+  background: #1e293b;
+  color: #38bdf8;
+}
+
+.btn-app-pay.paytm:hover {
+  background: #28374d;
+  border-color: #38bdf8;
 }
 
 .contact-actions-grid {
