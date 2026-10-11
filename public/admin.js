@@ -58,8 +58,17 @@ async function checkAdminSession() {
       }
     }
   } catch (_) {}
-  lockAdminPanel();
+  showAuthGate();
   return false;
+}
+
+function showAuthGate() {
+  const overlay = document.getElementById('admin-gate-overlay');
+  const main = document.getElementById('admin-main');
+  const actions = document.getElementById('admin-header-actions');
+  if (overlay) overlay.style.display = 'flex';
+  if (main) main.style.display = 'none';
+  if (actions) actions.style.display = 'none';
 }
 
 function getAuthHeaders() {
@@ -517,17 +526,34 @@ window.addEventListener('DOMContentLoaded', () => {
   // Verify server session
   checkAdminSession();
 
-  // Email Gate submit via server authentication API
-  document.getElementById('form-admin-email')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('admin-email-input')?.value.trim().toLowerCase();
-    const password = document.getElementById('admin-password-input')?.value;
-    const errEl = document.getElementById('gate-error');
-    const submitBtn = document.getElementById('btn-email-submit');
+  // Gate Tab Switching (Admin Login vs Secret PIN)
+  const tabEmail = document.getElementById('tab-email');
+  const tabPin = document.getElementById('tab-pin');
+  const formEmail = document.getElementById('form-admin-email');
+  const formPin = document.getElementById('form-admin-pin');
 
-    if (!email || !password) {
+  tabEmail?.addEventListener('click', () => {
+    tabEmail.classList.add('active');
+    tabPin?.classList.remove('active');
+    if (formEmail) formEmail.style.display = 'block';
+    if (formPin) formPin.style.display = 'none';
+    document.getElementById('admin-password-input')?.focus();
+  });
+
+  tabPin?.addEventListener('click', () => {
+    tabPin.classList.add('active');
+    tabEmail?.classList.remove('active');
+    if (formEmail) formEmail.style.display = 'none';
+    if (formPin) formPin.style.display = 'block';
+    document.getElementById('admin-pin-input')?.focus();
+  });
+
+  // Unified Server Authentication Handler
+  async function performAdminAuth({ email, password, submitBtn }) {
+    const errEl = document.getElementById('gate-error');
+    if (!password) {
       if (errEl) {
-        errEl.textContent = 'Please enter both email and password.';
+        errEl.textContent = 'Please enter your password or PIN.';
         errEl.style.display = 'block';
       }
       return;
@@ -539,11 +565,10 @@ window.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'Authenticating with server...';
       }
 
-      // 1. Authenticate against server-side endpoint with PBKDF2 verification & rate limiting
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email || 'feroznadafm@gmail.com', password })
       });
 
       const data = await res.json();
@@ -556,20 +581,30 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 2. Successful server authentication
+      // Successful server authentication
       if (errEl) errEl.style.display = 'none';
       if (data.token) {
         sessionStorage.setItem('karaoke_admin_token', data.token);
       }
 
-      // 3. Connect Supabase session if configured
+      // Securely bridge to Supabase session for admin controls
       if (supabaseAdmin) {
         try {
-          await supabaseAdmin.auth.signInWithPassword({ email, password });
+          if (data.supabaseSession?.access_token && data.supabaseSession?.refresh_token) {
+            await supabaseAdmin.auth.setSession({
+              access_token: data.supabaseSession.access_token,
+              refresh_token: data.supabaseSession.refresh_token
+            });
+          } else {
+            await supabaseAdmin.auth.signInWithPassword({
+              email: data.email || 'feroznadafm@gmail.com',
+              password
+            });
+          }
         } catch (_) {}
       }
 
-      unlockAdminPanel(data.email || email);
+      unlockAdminPanel(data.email || 'Verified Admin');
     } catch (err) {
       if (errEl) {
         errEl.textContent = `Server connection error: ${err.message}`;
@@ -578,9 +613,26 @@ window.addEventListener('DOMContentLoaded', () => {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign In as Admin →';
+        submitBtn.textContent = submitBtn.id === 'btn-pin-submit' ? 'Unlock Dashboard →' : 'Sign In as Admin →';
       }
     }
+  }
+
+  // Email Gate submit
+  document.getElementById('form-admin-email')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('admin-email-input')?.value.trim().toLowerCase();
+    const password = document.getElementById('admin-password-input')?.value;
+    const submitBtn = document.getElementById('btn-email-submit');
+    performAdminAuth({ email, password, submitBtn });
+  });
+
+  // PIN Gate submit
+  document.getElementById('form-admin-pin')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const pin = document.getElementById('admin-pin-input')?.value.trim();
+    const submitBtn = document.getElementById('btn-pin-submit');
+    performAdminAuth({ email: 'feroznadafm@gmail.com', password: pin, submitBtn });
   });
 
   // Lock button
@@ -642,8 +694,6 @@ window.addEventListener('DOMContentLoaded', () => {
         const remaining = user ? (user.credits || 0) : 0;
         openApprovalModal({ userId, email, remaining, added: 0, newTotal: 0, isReset: true });
         return;
-      }
-
       }
     });
 
