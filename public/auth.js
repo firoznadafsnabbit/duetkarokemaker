@@ -112,6 +112,11 @@ function updateAuthUI() {
     if (btnOpenAuth) btnOpenAuth.style.display = 'none';
     if (profileChip) profileChip.style.display = 'inline-flex';
     if (userEmailDisplay) userEmailDisplay.textContent = currentUser.email || 'Singer';
+    const userAvatarInitial = document.getElementById('user-avatar-initial');
+    if (userAvatarInitial) {
+      const email = (currentUser.email || 'Singer').trim();
+      userAvatarInitial.textContent = (email.charAt(0) || 'S').toUpperCase();
+    }
 
     if (userCreditsVal) userCreditsVal.textContent = currentCredits;
     if (userCreditsLabel) userCreditsLabel.textContent = 'Tokens';

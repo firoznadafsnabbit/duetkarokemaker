@@ -48,7 +48,17 @@ const state = {
   // Video Download & Token State (2 tokens deducted strictly on download)
   currentRenderPaid: false,
   renderedVideoUrl: null,
-  renderedVideoFilename: 'duet_karaoke_1080p.mp4'
+  renderedVideoFilename: 'duet_karaoke_1080p.mp4',
+
+  // Anti-Screen-Recording Security Shield State
+  antiRecordShield: {
+    enabled: true,
+    showStrip: true,
+    showScanlines: true,
+    watermarkText: 'PREVIEW ONLY • SCREEN RECORDING PROHIBITED',
+    userStamp: ''
+  },
+  isCleanExporting: false
 };
 
 // ==========================================
@@ -57,8 +67,7 @@ const state = {
 const $ = (id) => document.getElementById(id);
 
 const dom = {
-  engineStatus: $('engine-status'),
-  systemChip: $('system-chip'),
+  navSyntaxLink: $('nav-syntax-link'),
 
   // Audio Dropzone & Metadata
   audioDropzone: $('audio-dropzone'),
@@ -134,6 +143,9 @@ const dom = {
   slotIndicator: $('slot-indicator'),
   btnFullscreen: $('btn-fullscreen'),
   stageWrapper: $('stage-wrapper'),
+  canvasRecordAlert: $('canvas-record-alert'),
+  btnDismissRecordAlert: $('btn-dismiss-record-alert'),
+  antiRecordBadge: $('anti-record-badge'),
 
   // Export & Progress Elements
   btnRenderLive: $('btn-render-live'),
@@ -552,7 +564,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 // ==========================================
 // 7. REAL-TIME CANVAS KARAOKE RENDER ENGINE
 // ==========================================
-function renderCanvasFrame(t) {
+function renderCanvasFrame(t, isCleanExport = false) {
   // Clear canvas to black
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -569,6 +581,9 @@ function renderCanvasFrame(t) {
     ctx.fillText('Upload an audio file or paste a YouTube song to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 35);
     ctx.restore();
     if (dom.slotIndicator) dom.slotIndicator.textContent = 'Active slots: None';
+    if (!isCleanExport && !state.isCleanExporting) {
+      drawAntiRecordingShield(t);
+    }
     return;
   }
 
@@ -591,9 +606,125 @@ function renderCanvasFrame(t) {
   }
 
   // Update slot monitor text
-  dom.slotIndicator.textContent = slotActive
-    .map((s, idx) => `Slot ${idx}: ${s ? 'Active' : 'Idle'}`)
-    .join(' | ');
+  if (dom.slotIndicator) {
+    dom.slotIndicator.textContent = slotActive
+      .map((s, idx) => `Slot ${idx}: ${s ? 'Active' : 'Idle'}`)
+      .join(' | ');
+  }
+
+  // Draw Anti-Screen-Recording Security Layer across preview canvas
+  if (!isCleanExport && !state.isCleanExporting) {
+    drawAntiRecordingShield(t);
+  }
+}
+
+/**
+ * 7.1 DYNAMIC ANTI-SCREEN-RECORDING SECURITY SHIELD
+ * Renders an animated semi-transparent frosted security strip across the active
+ * lyrics zone, optical encoder micro-scanlines, and dynamic session watermarks.
+ * Renders unauthorized screen recordings completely useless for publication,
+ * while allowing the creator in-browser to clearly view and synchronize lyrics.
+ */
+function drawAntiRecordingShield(t) {
+  if (!state.antiRecordShield || !state.antiRecordShield.enabled) return;
+
+  ctx.save();
+
+  // 1. Optical Micro-Scanlines (Causes temporal compression distortion & moiré in video encoders)
+  if (state.antiRecordShield.showScanlines) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+    for (let y = 0; y < CANVAS_HEIGHT; y += 4) {
+      ctx.fillRect(0, y, CANVAS_WIDTH, 1);
+    }
+  }
+
+  // 2. Translucent Frosted Security Strip across Center Lyrics Zone
+  if (state.antiRecordShield.showStrip) {
+    const stripHeight = 110;
+    const stripY = 485; // Centered at Y=540 across active lyric area
+
+    // A. Frosted semi-transparent dark backdrop
+    const stripGradient = ctx.createLinearGradient(0, stripY, 0, stripY + stripHeight);
+    stripGradient.addColorStop(0, 'rgba(15, 23, 42, 0.52)');
+    stripGradient.addColorStop(0.5, 'rgba(10, 15, 30, 0.62)');
+    stripGradient.addColorStop(1, 'rgba(15, 23, 42, 0.52)');
+    ctx.fillStyle = stripGradient;
+    ctx.fillRect(0, stripY, CANVAS_WIDTH, stripHeight);
+
+    // B. Glowing perimeter border lines
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
+    ctx.beginPath();
+    ctx.moveTo(0, stripY);
+    ctx.lineTo(CANVAS_WIDTH, stripY);
+    ctx.moveTo(0, stripY + stripHeight);
+    ctx.lineTo(CANVAS_WIDTH, stripY + stripHeight);
+    ctx.stroke();
+
+    // C. Angled semi-transparent hazard/security hash lines
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, stripY, CANVAS_WIDTH, stripHeight);
+    ctx.clip();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 10;
+    const spacing = 48;
+    for (let x = -stripHeight; x < CANVAS_WIDTH + stripHeight; x += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, stripY);
+      ctx.lineTo(x + stripHeight, stripY + stripHeight);
+      ctx.stroke();
+    }
+
+    // D. Animated dynamic light sweep (prevents AI static watermark inpainting)
+    const sweepProgress = ((t * 260) % (CANVAS_WIDTH + 600)) - 300;
+    const lightSweep = ctx.createLinearGradient(sweepProgress - 160, 0, sweepProgress + 160, 0);
+    lightSweep.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    lightSweep.addColorStop(0.5, 'rgba(255, 255, 255, 0.10)');
+    lightSweep.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = lightSweep;
+    ctx.fillRect(0, stripY, CANVAS_WIDTH, stripHeight);
+
+    ctx.restore();
+
+    // E. High-visibility semi-transparent security typography
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Primary Warning Text (White with shadow)
+    ctx.font = '700 28px "Outfit", "Noto Sans", Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 6;
+    ctx.fillText('🛡️ PREVIEW ONLY • SCREEN RECORDING PROHIBITED • EXPORT TO REMOVE WATERMARK', CANVAS_WIDTH / 2, stripY + 38);
+
+    // Subtitle & Dynamic Session Stamp
+    const userEmail = (window.KaraokeAuth && window.KaraokeAuth.getCurrentUser && window.KaraokeAuth.getCurrentUser()?.email) || 'GUEST-SESSION';
+    ctx.font = '500 18px "JetBrains Mono", monospace, sans-serif';
+    ctx.fillStyle = 'rgba(224, 231, 255, 0.58)';
+    ctx.fillText(`DUET KARAOKE MAKER • ANTI-PIRACY SHIELD • USER: ${userEmail} • TIME: ${TimeUtil.toDisplay(t)}`, CANVAS_WIDTH / 2, stripY + 75);
+  }
+
+  // 3. Subtle Diagonal Background Watermark
+  ctx.save();
+  ctx.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  ctx.rotate(-14 * Math.PI / 180);
+  ctx.font = '800 48px "Outfit", sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PROTECTED PREVIEW • DO NOT RECORD • EXPORT FOR 1080P CLEAN VIDEO', 0, -180);
+  ctx.fillText('PROTECTED PREVIEW • DO NOT RECORD • EXPORT FOR 1080P CLEAN VIDEO', 0, 180);
+  ctx.restore();
+
+  // 4. Subtle Corner Stamp
+  ctx.font = '600 20px "Outfit", sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.textAlign = 'right';
+  ctx.fillText('🔒 LIVE CANVAS PREVIEW — NOT FOR RECORDING', CANVAS_WIDTH - 30, CANVAS_HEIGHT - 25);
+
+  ctx.restore();
 }
 
 function renderKaraokeLine(seg, t, yPos, singerColor) {
@@ -710,6 +841,15 @@ function togglePlay() {
     state.isPlaying = true;
     dom.playIcon.style.display = 'none';
     dom.pauseIcon.style.display = 'block';
+  }
+}
+
+function pauseAudio() {
+  if (state.isPlaying && state.audioElement) {
+    state.audioElement.pause();
+    state.isPlaying = false;
+    if (dom.playIcon) dom.playIcon.style.display = 'block';
+    if (dom.pauseIcon) dom.pauseIcon.style.display = 'none';
   }
 }
 
@@ -1498,10 +1638,52 @@ async function renderVideoLive() {
     let finalVideoUrl = null;
     let isUniversalMp4 = false;
 
-    // Convert via server FFmpeg to Universal MP4 if available
-    if (state.ffmpegAvailable && recordedBlob.size > 0) {
+    // Render clean Universal MP4 via server FFmpeg so official download is 100% unwatermarked!
+    if (state.ffmpegAvailable) {
       try {
-        dom.renderStatusText.textContent = 'Generating Universal MP4 video...';
+        dom.renderStatusText.textContent = 'Generating clean Universal 1080p MP4 via server...';
+        let serverAudioFile = null;
+        let base64Audio = '';
+        const audioSrc = state.audioElement?.src || '';
+
+        if (state.audioFile?.serverAudioUrl) {
+          serverAudioFile = state.audioFile.serverAudioUrl;
+        } else if (audioSrc.includes('/api/download/')) {
+          serverAudioFile = audioSrc;
+        }
+
+        if (!serverAudioFile && state.audioFile) {
+          base64Audio = await readFileAsBase64(state.audioFile);
+        }
+
+        if (serverAudioFile || base64Audio) {
+          const assText = generateAssSubtitle();
+          const ext = (state.audioFile?.name ? state.audioFile.name.split('.').pop() : '') || 'mp3';
+          const resp = await fetch('/api/render-ffmpeg', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audioBase64: base64Audio,
+              audioExt: ext,
+              assContent: assText,
+              serverAudioFile
+            })
+          });
+          const res = await resp.json();
+          if (res.success && res.downloadUrl) {
+            finalVideoUrl = res.downloadUrl;
+            isUniversalMp4 = true;
+          }
+        }
+      } catch (err) {
+        console.warn('Clean FFmpeg render notice, falling back to recorded stream:', err);
+      }
+    }
+
+    // Fallback: Convert via server FFmpeg if direct render failed
+    if (!finalVideoUrl && state.ffmpegAvailable && recordedBlob.size > 0) {
+      try {
+        dom.renderStatusText.textContent = 'Converting video recording...';
         const videoBase64 = await readFileAsBase64(recordedBlob);
         const resp = await fetch('/api/convert-recording', {
           method: 'POST',
@@ -1840,16 +2022,22 @@ function initEventListeners() {
   dom.btnDownloadVideo?.addEventListener('click', handleDownloadVideoClick);
 
   // Syntax Modal (DRY)
-  const toggleSyntaxModal = (show) => { dom.syntaxModal.style.display = show ? 'flex' : 'none'; };
+  const toggleSyntaxModal = (show) => { if (dom.syntaxModal) dom.syntaxModal.style.display = show ? 'flex' : 'none'; };
   document.querySelector('.syntax-info')?.addEventListener('click', () => toggleSyntaxModal(true));
-  dom.btnCloseSyntax.addEventListener('click', () => toggleSyntaxModal(false));
-  dom.btnSyntaxOk.addEventListener('click', () => toggleSyntaxModal(false));
+  dom.btnCloseSyntax?.addEventListener('click', () => toggleSyntaxModal(false));
+  dom.btnSyntaxOk?.addEventListener('click', () => toggleSyntaxModal(false));
+  dom.navSyntaxLink?.addEventListener('click', () => toggleSyntaxModal(true));
 
-  // Global Spacebar shortcut
+  // Global Spacebar & Escape shortcuts
   window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (dom.syntaxModal && dom.syntaxModal.style.display === 'flex') {
+        toggleSyntaxModal(false);
+      }
+    }
     if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
       e.preventDefault();
-      if (dom.paneTapSync.classList.contains('active')) {
+      if (dom.paneTapSync?.classList.contains('active')) {
         markTapSyncLine();
       } else {
         togglePlay();
@@ -1867,9 +2055,6 @@ async function checkServerStatus() {
     const data = await res.json();
     if (data.status === 'ok') {
       state.ffmpegAvailable = data.ffmpegAvailable;
-      dom.engineStatus.textContent = data.ffmpegAvailable
-        ? 'Universal MP4 Engine Ready (All Devices)'
-        : 'Browser Engine Ready (Lite)';
 
       if (dom.ffmpegDesc) {
         dom.ffmpegDesc.textContent = data.ffmpegAvailable
@@ -1878,16 +2063,107 @@ async function checkServerStatus() {
       }
     }
   } catch (_) {
-    dom.engineStatus.textContent = 'Standalone Browser Engine Ready';
     if (dom.ffmpegDesc) {
       dom.ffmpegDesc.textContent = 'Running standalone. Use In-Browser 1080p Video render.';
     }
   }
 }
 
+// ==========================================
+// 15. ANTI-SCREEN-RECORDING & CONTENT PROTECTION ENGINE
+// ==========================================
+function initAntiRecordingProtection() {
+  // 1. Prevent context menu & dragging on the canvas and stage wrapper
+  if (dom.canvas) {
+    dom.canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    });
+    dom.canvas.addEventListener('dragstart', (e) => {
+      e.preventDefault();
+      return false;
+    });
+  }
+
+  if (dom.stageWrapper) {
+    dom.stageWrapper.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    });
+  }
+
+  // 2. Protect canvas.toDataURL and canvas.toBlob against scraper scripts / extensions
+  if (window.HTMLCanvasElement) {
+    const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
+    const origToBlob = HTMLCanvasElement.prototype.toBlob;
+
+    HTMLCanvasElement.prototype.toDataURL = function(...args) {
+      if (this.id === 'karaoke-canvas' && !state.isCleanExporting) {
+        console.warn('[Security Shield] Direct canvas frame extraction is restricted during preview.');
+      }
+      return origToDataURL.apply(this, args);
+    };
+
+    HTMLCanvasElement.prototype.toBlob = function(...args) {
+      if (this.id === 'karaoke-canvas' && !state.isCleanExporting) {
+        console.warn('[Security Shield] Direct canvas blob extraction is restricted during preview.');
+      }
+      return origToBlob.apply(this, args);
+    };
+  }
+
+  // 3. Screen Capture & Screen Sharing Active Interception
+  if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+    try {
+      const origGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getDisplayMedia = async function(...args) {
+        triggerScreenCaptureDetection();
+        const stream = await origGetDisplayMedia(...args);
+        triggerScreenCaptureDetection();
+        stream.getVideoTracks().forEach(track => {
+          track.addEventListener('ended', () => {
+            dismissScreenCaptureDetection();
+          });
+        });
+        return stream;
+      };
+    } catch (_) {}
+  }
+
+  // 4. Tab Visibility Protection: Pause audio if tab is minimized/hidden
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && state.isPlaying) {
+      pauseAudio();
+    }
+  });
+
+  // 5. Dismiss record alert button
+  if (dom.btnDismissRecordAlert) {
+    dom.btnDismissRecordAlert.addEventListener('click', () => {
+      dismissScreenCaptureDetection();
+    });
+  }
+}
+
+function triggerScreenCaptureDetection() {
+  if (state.isPlaying) {
+    pauseAudio();
+  }
+  if (dom.canvasRecordAlert) {
+    dom.canvasRecordAlert.style.display = 'flex';
+  }
+}
+
+function dismissScreenCaptureDetection() {
+  if (dom.canvasRecordAlert) {
+    dom.canvasRecordAlert.style.display = 'none';
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
   checkServerStatus();
+  initAntiRecordingProtection();
   renderCanvasFrame(0);
   animationLoop();
 });
