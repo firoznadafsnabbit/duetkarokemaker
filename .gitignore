@@ -39,3 +39,4 @@ secrets/
 .idea/
 
 .vercel
+.env*
