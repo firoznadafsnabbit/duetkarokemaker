@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pricing &amp; Digital Delivery Policy | Karoke Maker</title>
-  <meta name="description" content="Transparent pricing for Karoke Maker by Ayesha Tech Studio. Pay-as-you-go token packages (10, 20, 45, 100 tokens) with instant digital delivery.">
+  <meta name="description" content="Transparent pricing for Karoke Maker by Ayesha Tech Studio. Pay-as-you-go token packages (8, 20, 48, 120 tokens) with instant digital delivery.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -95,26 +95,31 @@
 
         <!-- Token Packages Grid -->
         <div class="token-packages-grid">
-          <div class="token-pkg-card" data-tokens="10" tabindex="0" role="button" aria-label="10 Tokens, 5 Videos for 49 Rupees">
-            <span class="pkg-tokens">10 Tokens</span>
-            <span class="pkg-videos">5 Videos</span>
+          <div class="token-pkg-card" data-tokens="8" tabindex="0" role="button" aria-label="Starter: 8 Tokens, 4 Videos for 49 Rupees">
+            <span class="pkg-tier-name" style="font-size: 0.76rem; font-weight: 700; color: var(--brand-cyan); text-transform: uppercase; letter-spacing: 0.05em;">Starter</span>
+            <span class="pkg-tokens">8 Tokens</span>
+            <span class="pkg-videos">4 Videos</span>
             <span class="pkg-price">₹49</span>
           </div>
-          <div class="token-pkg-card active" data-tokens="20" tabindex="0" role="button" aria-label="20 Tokens, 10 Videos for 99 Rupees">
+          <div class="token-pkg-card active" data-tokens="20" tabindex="0" role="button" aria-label="Creator: 20 Tokens, 10 Videos for 99 Rupees">
             <span class="pkg-badge-popular">Popular</span>
+            <span class="pkg-tier-name" style="font-size: 0.76rem; font-weight: 700; color: var(--brand-cyan); text-transform: uppercase; letter-spacing: 0.05em;">Creator</span>
             <span class="pkg-tokens">20 Tokens</span>
             <span class="pkg-videos">10 Videos</span>
             <span class="pkg-price">₹99</span>
           </div>
-          <div class="token-pkg-card" data-tokens="45" tabindex="0" role="button" aria-label="45 Tokens, 22 Videos for 199 Rupees">
-            <span class="pkg-tokens">45 Tokens</span>
-            <span class="pkg-videos">22 Videos</span>
+          <div class="token-pkg-card" data-tokens="48" tabindex="0" role="button" aria-label="Pro Singer: 48 Tokens, 24 Videos for 199 Rupees">
+            <span class="pkg-badge-popular" style="background: linear-gradient(135deg, #ec4899, #8b5cf6);">+8 Bonus</span>
+            <span class="pkg-tier-name" style="font-size: 0.76rem; font-weight: 700; color: var(--brand-cyan); text-transform: uppercase; letter-spacing: 0.05em;">Pro Singer</span>
+            <span class="pkg-tokens">48 Tokens</span>
+            <span class="pkg-videos">24 Videos</span>
             <span class="pkg-price">₹199</span>
           </div>
-          <div class="token-pkg-card" data-tokens="100" tabindex="0" role="button" aria-label="100 Tokens, 50 Videos for 399 Rupees">
+          <div class="token-pkg-card" data-tokens="120" tabindex="0" role="button" aria-label="Studio Master: 120 Tokens, 60 Videos for 399 Rupees">
             <span class="pkg-badge-value">Best Value</span>
-            <span class="pkg-tokens">100 Tokens</span>
-            <span class="pkg-videos">50 Videos</span>
+            <span class="pkg-tier-name" style="font-size: 0.76rem; font-weight: 700; color: var(--brand-cyan); text-transform: uppercase; letter-spacing: 0.05em;">Studio Master</span>
+            <span class="pkg-tokens">120 Tokens</span>
+            <span class="pkg-videos">60 Videos</span>
             <span class="pkg-price">₹399</span>
           </div>
         </div>
@@ -242,41 +247,36 @@
             <table class="legal-table">
               <thead>
                 <tr>
-                  <th>Package</th>
-                  <th>Tokens</th>
+                  <th>Tier</th>
+                  <th>Price</th>
+                  <th>Tokens Delivered</th>
                   <th>Full Videos (2 Tokens/ea)</th>
-                  <th>Price (INR)</th>
-                  <th>Effective Cost / Song</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>Starter Pack</strong></td>
-                  <td>10 Tokens</td>
-                  <td>5 Videos</td>
+                  <td><strong>Starter</strong></td>
                   <td><strong>₹49</strong></td>
-                  <td>₹9.80 / video</td>
+                  <td>8</td>
+                  <td>4 Videos</td>
                 </tr>
                 <tr>
-                  <td><strong>Popular Pack</strong></td>
-                  <td>20 Tokens</td>
-                  <td>10 Videos</td>
+                  <td><strong>Creator</strong></td>
                   <td><strong>₹99</strong></td>
-                  <td>₹9.90 / video</td>
+                  <td>20</td>
+                  <td>10 Videos</td>
                 </tr>
                 <tr>
-                  <td><strong>Pro Singer Pack</strong></td>
-                  <td>45 Tokens</td>
-                  <td>22 Videos</td>
+                  <td><strong>Pro Singer</strong></td>
                   <td><strong>₹199</strong></td>
-                  <td>₹9.04 / video</td>
+                  <td>48 (40 + <em>8 Bonus</em>)</td>
+                  <td>24 Videos</td>
                 </tr>
                 <tr>
-                  <td><strong>Studio Master Pack</strong></td>
-                  <td>100 Tokens</td>
-                  <td>50 Videos</td>
+                  <td><strong>Studio Master</strong></td>
                   <td><strong>₹399</strong></td>
-                  <td>₹7.98 / video</td>
+                  <td>120 (80 + <em>40 Bonus</em>)</td>
+                  <td>60 Videos</td>
                 </tr>
               </tbody>
             </table>

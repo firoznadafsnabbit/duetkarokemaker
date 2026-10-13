@@ -20,11 +20,12 @@ const SUPABASE_CONFIG = {
   freeCredits: 6
 };
 
+// Token Package Tiers: Starter (8 => 49rs), Creator (20 => 99rs), Pro Singer (48 => 199rs), Studio Master (120 => 399rs)
 const TOKEN_PACKAGES = {
-  10: 49,
+  8: 49,
   20: 99,
-  45: 199,
-  100: 399
+  48: 199,
+  120: 399
 };
 
 function calculateTokenPrice(tokens) {
@@ -33,11 +34,11 @@ function calculateTokenPrice(tokens) {
   if (TOKEN_PACKAGES[count]) {
     return TOKEN_PACKAGES[count];
   }
-  if (count <= 10) return Math.max(10, Math.round(count * 4.9));
-  if (count <= 20) return Math.round(49 + ((count - 10) * 5.0));
-  if (count <= 45) return Math.round(99 + ((count - 20) * 4.0));
-  if (count <= 100) return Math.round(199 + ((count - 45) * 3.63));
-  return Math.round(count * 3.99);
+  if (count <= 8) return Math.max(10, Math.round(count * 6.125));
+  if (count <= 20) return Math.round(49 + ((count - 8) * 4.167));
+  if (count <= 48) return Math.round(99 + ((count - 20) * 3.571));
+  if (count <= 120) return Math.round(199 + ((count - 48) * 2.778));
+  return Math.round(count * 3.325);
 }
 
 let selectedTokens = 20;
