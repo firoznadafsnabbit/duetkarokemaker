@@ -84,14 +84,25 @@ body {
 }
 
 .legal-brand-icon {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--brand-cyan), var(--brand-blue));
+  background: rgba(15, 23, 42, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #080c14;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.legal-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .legal-brand-title {
