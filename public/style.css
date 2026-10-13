@@ -890,6 +890,10 @@ input[type="color"]::-webkit-color-swatch {
   margin-bottom: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   transition: all 0.25s ease;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .builder-panel-header {
@@ -1035,11 +1039,13 @@ input[type="color"]::-webkit-color-swatch {
 
 .builder-times-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .builder-times-grid {
     grid-template-columns: 1fr;
   }
@@ -1047,24 +1053,30 @@ input[type="color"]::-webkit-color-swatch {
 
 .builder-time-card {
   background: rgba(12, 16, 26, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
-  padding: 10px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .time-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
 }
 
 .time-card-label {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .btn-sync-time {
@@ -1074,12 +1086,14 @@ input[type="color"]::-webkit-color-swatch {
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.35);
   color: #38bdf8;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 3px 7px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-sync-time:hover {
@@ -1091,20 +1105,24 @@ input[type="color"]::-webkit-color-swatch {
 .time-card-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-nudge {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-subtle);
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   font-family: var(--font-mono);
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .btn-nudge:hover {
@@ -1114,17 +1132,20 @@ input[type="color"]::-webkit-color-swatch {
 }
 
 .time-val-input {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
   text-align: center;
   background: rgba(6, 9, 16, 0.95);
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
   color: #38bdf8;
   font-family: var(--font-mono);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
-  padding: 6px 4px;
+  padding: 5px 4px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .time-val-input:focus {
@@ -1138,14 +1159,16 @@ input[type="color"]::-webkit-color-swatch {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .builder-audition-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -1166,7 +1189,7 @@ input[type="color"]::-webkit-color-swatch {
   color: var(--text-faint);
   font-size: 0.68rem;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 3px;
   cursor: pointer;
 }
@@ -1180,8 +1203,8 @@ input[type="color"]::-webkit-color-swatch {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  font-size: 0.82rem;
+  padding: 7px 14px;
+  font-size: 0.8rem;
   font-weight: 700;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, #00f2fe, #0072ff);
@@ -1189,12 +1212,29 @@ input[type="color"]::-webkit-color-swatch {
   border: none;
   cursor: pointer;
   transition: all 0.18s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 114, 255, 0.3);
 }
 
 .btn-submit-line:hover {
   background: linear-gradient(135deg, #38f9d7, #00c6ff);
   box-shadow: 0 0 16px rgba(0, 242, 254, 0.4);
   transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .builder-footer-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .builder-audition-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .btn-submit-line {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Lyrics Box Wrapper */
