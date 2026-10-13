@@ -334,7 +334,6 @@ function updateTokenRechargeUI() {
 *Login Email:* ${userEmail}
 *Package Selected:* ${selectedTokens} Tokens (${videosCount} Full Videos)
 *Amount Payable:* ₹${totalPrice}
-*Paid to UPI ID:* ${SUPABASE_CONFIG.upiId}
 
 Hi Ayesha Tech Studio Team, I have initiated payment of ₹${totalPrice} for ${selectedTokens} Tokens. Please verify and credit to my account (${userEmail}). Thank you!`;
 
