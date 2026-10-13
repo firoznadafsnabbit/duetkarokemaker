@@ -13,9 +13,9 @@
 const SUPABASE_CONFIG = {
   url: 'https://odvgmniswfpahwkqwtcw.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kdmdtbmlzd2ZwYWh3a3F3dGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzE4MTksImV4cCI6MjEwNzEwNzgxOX0.dl3gytRtsokArFxN_VH2nMABfAF35757ghOnm-dYESs',
-  whatsappNumber: '919663396058',
+  whatsappNumber: '919743247790',
   upiId: 'feroznadaf13008@ybl',
-  payeeName: 'ArmaanKaraoke',
+  payeeName: 'AyeshaTechStudio',
   tokensPerVideo: 2,
   freeCredits: 6
 };
@@ -204,7 +204,7 @@ function updateOrderSummary() {
 *Amount Payable:* ₹${totalPrice}
 *Paid to UPI ID:* ${SUPABASE_CONFIG.upiId}
 
-Hi Armaan Karaoke Team, I have initiated payment of ₹${totalPrice} for ${selectedTokens} Tokens. Please verify and credit to my account (${effectiveEmail}). Thank you!`;
+Hi Ayesha Tech Studio Team, I have initiated payment of ₹${totalPrice} for ${selectedTokens} Tokens. Please verify and credit to my account (${effectiveEmail}). Thank you!`;
 
     waBtn.href = `https://wa.me/${SUPABASE_CONFIG.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
   }

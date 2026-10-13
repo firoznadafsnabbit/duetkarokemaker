@@ -136,6 +136,28 @@ const dom = {
   btnTapSyncReset: $('btn-tap-sync-reset'),
   tapSyncLinesList: $('tap-sync-lines-list'),
 
+  // Lyric Line Builder & Timing Adjuster Elements
+  btnToggleLineBuilder: $('btn-toggle-line-builder'),
+  btnBoxQuickAdd: $('btn-box-quick-add'),
+  lineBuilderPanel: $('line-builder-panel'),
+  builderLiveSongTime: $('builder-live-song-time'),
+  builderVoiceGroup: $('builder-voice-group'),
+  builderLineText: $('builder-line-text'),
+  builderStartTime: $('builder-start-time'),
+  builderEndTime: $('builder-end-time'),
+  btnSyncStartAudio: $('btn-sync-start-audio'),
+  btnSyncEndAudio: $('btn-sync-end-audio'),
+  btnStartMinus05: $('btn-start-minus-05'),
+  btnStartPlus05: $('btn-start-plus-05'),
+  btnEndMinus05: $('btn-end-minus-05'),
+  btnEndPlus05: $('btn-end-plus-05'),
+  btnAuditionRange: $('btn-audition-range'),
+  btnSubmitAddLine: $('btn-submit-add-line'),
+  btnToggleLineManager: $('btn-toggle-line-manager'),
+  lineMgrCount: $('line-mgr-count'),
+  lineManagerPanel: $('line-manager-panel'),
+  lineManagerList: $('line-manager-list'),
+
   // Stage & Canvas
   canvas: $('karaoke-canvas'),
   canvasGuide: $('canvas-guide'),
@@ -798,6 +820,9 @@ function animationLoop() {
 
 function updateTimeDisplay() {
   dom.timeDisplay.textContent = `${TimeUtil.toDisplay(state.currentTime)} / ${TimeUtil.toDisplay(state.audioDuration)}`;
+  if (dom.builderLiveSongTime) {
+    dom.builderLiveSongTime.textContent = TimeUtil.toDisplay(state.currentTime);
+  }
 }
 
 // ==========================================
@@ -1360,6 +1385,9 @@ function renderTapSyncList() {
     const spanTime = document.createElement('span');
     spanTime.style.fontFamily = 'var(--font-mono)';
     spanTime.style.color = '#00ffff';
+    const timeStr = item.start !== null
+      ? `${TimeUtil.toDisplay(item.start)} - ${item.end !== null ? TimeUtil.toDisplay(item.end) : '...'}`
+      : '--:--';
     spanTime.textContent = timeStr;
     div.appendChild(spanText);
     div.appendChild(spanTime);
@@ -1404,6 +1432,376 @@ function applyTapSyncToEditor() {
   dom.lyricsTextarea.value = output;
   parseAndUpdateLyrics();
   dom.tabEditor.click();
+}
+
+// ==========================================
+// 10.1 LYRIC LINE BUILDER & TIMING ADJUSTER ENGINE
+// ==========================================
+let currentBuilderVoice = '[1]';
+let auditionTimer = null;
+
+function auditionAudioRange(startSec, endSec) {
+  if (!state.audioElement || !state.audioElement.src) {
+    alert('Please upload an audio track or import from YouTube first to test audio timing!');
+    return;
+  }
+  if (auditionTimer) clearTimeout(auditionTimer);
+
+  const safeStart = Math.max(0, startSec);
+  const safeEnd = Math.max(safeStart + 0.1, endSec);
+
+  state.currentTime = safeStart;
+  state.audioElement.currentTime = safeStart;
+  updateTimeDisplay();
+  renderCanvasFrame(safeStart);
+
+  if (!state.isPlaying) {
+    togglePlay();
+  }
+
+  const playbackRate = state.playbackRate || 1.0;
+  const durationMs = Math.max(250, ((safeEnd - safeStart) * 1000) / playbackRate);
+
+  auditionTimer = setTimeout(() => {
+    pauseAudio();
+  }, durationMs);
+}
+
+function setupLineBuilderAndManager() {
+  // 1. Toggle Line Builder Panel
+  const toggleBuilder = () => {
+    if (!dom.lineBuilderPanel) return;
+    const isHidden = dom.lineBuilderPanel.style.display === 'none' || getComputedStyle(dom.lineBuilderPanel).display === 'none';
+    dom.lineBuilderPanel.style.display = isHidden ? 'flex' : 'none';
+    if (isHidden) {
+      dom.builderLineText?.focus();
+      // If start time is 00:00.00 and audio has progressed, sync with song audio position
+      if (dom.builderStartTime && (!dom.builderStartTime.value || dom.builderStartTime.value === '00:00.00') && state.currentTime > 0) {
+        dom.builderStartTime.value = TimeUtil.toDisplay(state.currentTime);
+        dom.builderEndTime.value = TimeUtil.toDisplay(state.currentTime + 5.0);
+      }
+    }
+  };
+
+  dom.btnToggleLineBuilder?.addEventListener('click', toggleBuilder);
+  dom.btnBoxQuickAdd?.addEventListener('click', () => {
+    if (dom.lineBuilderPanel && (dom.lineBuilderPanel.style.display === 'none' || getComputedStyle(dom.lineBuilderPanel).display === 'none')) {
+      toggleBuilder();
+    } else {
+      dom.builderLineText?.focus();
+    }
+  });
+
+  // 2. Voice Pills Selector
+  if (dom.builderVoiceGroup) {
+    dom.builderVoiceGroup.querySelectorAll('.voice-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        dom.builderVoiceGroup.querySelectorAll('.voice-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentBuilderVoice = pill.getAttribute('data-voice') || '[1]';
+      });
+    });
+  }
+
+  // 3. Audio Time Capture buttons (⏱️ Set from Song)
+  dom.btnSyncStartAudio?.addEventListener('click', () => {
+    const curTime = state.currentTime || (state.audioElement ? state.audioElement.currentTime : 0);
+    if (dom.builderStartTime) dom.builderStartTime.value = TimeUtil.toDisplay(curTime);
+  });
+
+  dom.btnSyncEndAudio?.addEventListener('click', () => {
+    const curTime = state.currentTime || (state.audioElement ? state.audioElement.currentTime : 0);
+    if (dom.builderEndTime) dom.builderEndTime.value = TimeUtil.toDisplay(curTime);
+  });
+
+  // 4. Nudge buttons (-0.5s / +0.5s)
+  const nudgeTime = (inputEl, delta) => {
+    if (!inputEl) return;
+    const curSec = TimeUtil.toSeconds(inputEl.value);
+    const newSec = Math.max(0, curSec + delta);
+    inputEl.value = TimeUtil.toDisplay(newSec);
+  };
+
+  dom.btnStartMinus05?.addEventListener('click', () => nudgeTime(dom.builderStartTime, -0.5));
+  dom.btnStartPlus05?.addEventListener('click', () => nudgeTime(dom.builderStartTime, 0.5));
+  dom.btnEndMinus05?.addEventListener('click', () => nudgeTime(dom.builderEndTime, -0.5));
+  dom.btnEndPlus05?.addEventListener('click', () => nudgeTime(dom.builderEndTime, 0.5));
+
+  // 5. Preset duration chips (+3s, +5s, +8s)
+  document.querySelectorAll('.btn-dur-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const dur = parseFloat(chip.getAttribute('data-dur') || '5');
+      const startSec = TimeUtil.toSeconds(dom.builderStartTime?.value || '00:00.00');
+      if (dom.builderEndTime) {
+        dom.builderEndTime.value = TimeUtil.toDisplay(startSec + dur);
+      }
+    });
+  });
+
+  // 6. Audition button (▶ Test Audio Range)
+  dom.btnAuditionRange?.addEventListener('click', () => {
+    const s = TimeUtil.toSeconds(dom.builderStartTime?.value || '0');
+    const e = TimeUtil.toSeconds(dom.builderEndTime?.value || '0');
+    if (e <= s) {
+      alert('End time must be greater than start time to test audio.');
+      return;
+    }
+    auditionAudioRange(s, e);
+  });
+
+  // 7. Submit button (+ Add Line to Box)
+  dom.btnSubmitAddLine?.addEventListener('click', handleAddLineSubmit);
+  dom.builderLineText?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddLineSubmit();
+    }
+  });
+
+  // 8. Line Manager toggle
+  dom.btnToggleLineManager?.addEventListener('click', () => {
+    if (!dom.lineManagerPanel) return;
+    const isHidden = dom.lineManagerPanel.style.display === 'none' || getComputedStyle(dom.lineManagerPanel).display === 'none';
+    dom.lineManagerPanel.style.display = isHidden ? 'flex' : 'none';
+    if (isHidden) renderLineManagerList();
+  });
+}
+
+function handleAddLineSubmit() {
+  const text = (dom.builderLineText?.value || '').trim();
+  if (!text) {
+    dom.builderLineText?.focus();
+    return;
+  }
+
+  const startStr = (dom.builderStartTime?.value || '00:00.00').trim();
+  let endStr = (dom.builderEndTime?.value || '00:05.00').trim();
+
+  let startSec = TimeUtil.toSeconds(startStr);
+  let endSec = TimeUtil.toSeconds(endStr);
+  if (endSec <= startSec) {
+    endSec = startSec + 4.0;
+    endStr = TimeUtil.toDisplay(endSec);
+    if (dom.builderEndTime) dom.builderEndTime.value = endStr;
+  }
+
+  const formattedLine = `${currentBuilderVoice} [${startStr} - ${endStr}] ${text}`;
+
+  const currentVal = dom.lyricsTextarea.value.trim();
+  dom.lyricsTextarea.value = currentVal ? `${currentVal}\n${formattedLine}` : formattedLine;
+
+  parseAndUpdateLyrics();
+
+  // Scroll textarea to bottom
+  dom.lyricsTextarea.scrollTop = dom.lyricsTextarea.scrollHeight;
+
+  // Advance next start time to this line's end time
+  if (dom.builderStartTime) dom.builderStartTime.value = endStr;
+  if (dom.builderEndTime) dom.builderEndTime.value = TimeUtil.toDisplay(endSec + 4.0);
+
+  // Clear text input and re-focus for fast sequential line entry
+  if (dom.builderLineText) {
+    dom.builderLineText.value = '';
+    dom.builderLineText.focus();
+  }
+}
+
+function renderLineManagerList() {
+  if (!dom.lineManagerList) return;
+  dom.lineManagerList.innerHTML = '';
+
+  if (dom.lineMgrCount) {
+    dom.lineMgrCount.textContent = state.segments.length;
+  }
+
+  if (state.segments.length === 0) {
+    dom.lineManagerList.innerHTML = '<p class="placeholder-text" style="padding:14px;text-align:center;color:var(--text-muted);font-size:0.8rem;">No lyrics lines parsed yet. Use <strong>+ Add Line to Box</strong> above or paste lyrics in the box.</p>';
+    return;
+  }
+
+  state.segments.forEach((seg, idx) => {
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+
+    // Index
+    const indexSpan = document.createElement('span');
+    indexSpan.style.cssText = 'font-size:0.75rem;font-weight:700;color:var(--text-faint);min-width:24px;';
+    indexSpan.textContent = `#${idx + 1}`;
+    row.appendChild(indexSpan);
+
+    // Voice Selector
+    const voiceSelect = document.createElement('select');
+    voiceSelect.className = 'line-voice-select';
+    voiceSelect.innerHTML = `
+      <option value="1" ${seg.colorMode === 1 ? 'selected' : ''}>[1] Male</option>
+      <option value="2" ${seg.colorMode === 2 ? 'selected' : ''}>[2] Female</option>
+      <option value="3" ${seg.colorMode === 3 ? 'selected' : ''}>[3] Both</option>
+    `;
+    voiceSelect.addEventListener('change', (e) => {
+      seg.colorMode = parseInt(e.target.value, 10);
+      syncSegmentsToTextarea();
+    });
+    row.appendChild(voiceSelect);
+
+    // Start Time Group
+    const startGroup = document.createElement('div');
+    startGroup.className = 'line-time-group';
+
+    const btnStartMinus = document.createElement('button');
+    btnStartMinus.type = 'button';
+    btnStartMinus.className = 'line-btn-mini';
+    btnStartMinus.title = '-0.2s';
+    btnStartMinus.textContent = '-.2';
+    btnStartMinus.addEventListener('click', () => {
+      seg.start = Math.max(0, seg.start - 0.2);
+      syncSegmentsToTextarea();
+    });
+
+    const startInput = document.createElement('input');
+    startInput.type = 'text';
+    startInput.className = 'line-time-input-sm';
+    startInput.value = TimeUtil.toDisplay(seg.start);
+    startInput.title = 'Start Time';
+    startInput.addEventListener('change', () => {
+      seg.start = TimeUtil.toSeconds(startInput.value);
+      syncSegmentsToTextarea();
+    });
+
+    const btnStartPlus = document.createElement('button');
+    btnStartPlus.type = 'button';
+    btnStartPlus.className = 'line-btn-mini';
+    btnStartPlus.title = '+0.2s';
+    btnStartPlus.textContent = '+.2';
+    btnStartPlus.addEventListener('click', () => {
+      seg.start = seg.start + 0.2;
+      syncSegmentsToTextarea();
+    });
+
+    const btnSyncStart = document.createElement('button');
+    btnSyncStart.type = 'button';
+    btnSyncStart.className = 'line-btn-mini';
+    btnSyncStart.title = 'Set to current song audio position';
+    btnSyncStart.textContent = '⏱️';
+    btnSyncStart.addEventListener('click', () => {
+      seg.start = state.currentTime;
+      syncSegmentsToTextarea();
+    });
+
+    startGroup.appendChild(btnStartMinus);
+    startGroup.appendChild(startInput);
+    startGroup.appendChild(btnStartPlus);
+    startGroup.appendChild(btnSyncStart);
+    row.appendChild(startGroup);
+
+    // Arrow separator
+    const arrow = document.createElement('span');
+    arrow.style.cssText = 'color:var(--text-faint);font-size:0.75rem;';
+    arrow.textContent = '→';
+    row.appendChild(arrow);
+
+    // End Time Group
+    const endGroup = document.createElement('div');
+    endGroup.className = 'line-time-group';
+
+    const btnEndMinus = document.createElement('button');
+    btnEndMinus.type = 'button';
+    btnEndMinus.className = 'line-btn-mini';
+    btnEndMinus.title = '-0.2s';
+    btnEndMinus.textContent = '-.2';
+    btnEndMinus.addEventListener('click', () => {
+      seg.end = Math.max(seg.start + 0.2, seg.end - 0.2);
+      syncSegmentsToTextarea();
+    });
+
+    const endInput = document.createElement('input');
+    endInput.type = 'text';
+    endInput.className = 'line-time-input-sm';
+    endInput.value = TimeUtil.toDisplay(seg.end);
+    endInput.title = 'End Time';
+    endInput.addEventListener('change', () => {
+      seg.end = Math.max(seg.start + 0.2, TimeUtil.toSeconds(endInput.value));
+      syncSegmentsToTextarea();
+    });
+
+    const btnEndPlus = document.createElement('button');
+    btnEndPlus.type = 'button';
+    btnEndPlus.className = 'line-btn-mini';
+    btnEndPlus.title = '+0.2s';
+    btnEndPlus.textContent = '+.2';
+    btnEndPlus.addEventListener('click', () => {
+      seg.end = seg.end + 0.2;
+      syncSegmentsToTextarea();
+    });
+
+    const btnSyncEnd = document.createElement('button');
+    btnSyncEnd.type = 'button';
+    btnSyncEnd.className = 'line-btn-mini';
+    btnSyncEnd.title = 'Set to current song audio position';
+    btnSyncEnd.textContent = '⏱️';
+    btnSyncEnd.addEventListener('click', () => {
+      seg.end = Math.max(seg.start + 0.2, state.currentTime);
+      syncSegmentsToTextarea();
+    });
+
+    endGroup.appendChild(btnEndMinus);
+    endGroup.appendChild(endInput);
+    endGroup.appendChild(btnEndPlus);
+    endGroup.appendChild(btnSyncEnd);
+    row.appendChild(endGroup);
+
+    // Lyrics Text Input
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'line-text-input-main';
+    textInput.value = seg.text || '';
+    textInput.placeholder = 'Lyrics text...';
+    textInput.addEventListener('change', () => {
+      seg.text = textInput.value.trim();
+      syncSegmentsToTextarea();
+    });
+    row.appendChild(textInput);
+
+    // Audition Button
+    const btnPlayLine = document.createElement('button');
+    btnPlayLine.type = 'button';
+    btnPlayLine.className = 'line-btn-action';
+    btnPlayLine.title = 'Audition this line audio';
+    btnPlayLine.textContent = '▶';
+    btnPlayLine.addEventListener('click', () => {
+      auditionAudioRange(seg.start, seg.end);
+    });
+    row.appendChild(btnPlayLine);
+
+    // Delete Button
+    const btnDelete = document.createElement('button');
+    btnDelete.type = 'button';
+    btnDelete.className = 'line-btn-action line-btn-delete';
+    btnDelete.title = 'Delete line';
+    btnDelete.textContent = '🗑️';
+    btnDelete.addEventListener('click', () => {
+      state.segments.splice(idx, 1);
+      syncSegmentsToTextarea();
+    });
+    row.appendChild(btnDelete);
+
+    dom.lineManagerList.appendChild(row);
+  });
+}
+
+function syncSegmentsToTextarea() {
+  const formatted = state.segments.map(seg => {
+    const s = TimeUtil.toDisplay(seg.start);
+    const e = TimeUtil.toDisplay(seg.end);
+    const tag = `[${seg.colorMode || 1}]`;
+    return `${tag} [${s} - ${e}] ${seg.text}`;
+  }).join('\n');
+
+  dom.lyricsTextarea.value = formatted;
+  state.lyricsRaw = formatted;
+  state.segments = parseManualTimestamps(state.lyricsRaw);
+  dom.parsedCountBadge.textContent = `${state.segments.length} lines parsed`;
+  if (dom.lineMgrCount) dom.lineMgrCount.textContent = state.segments.length;
+  renderCanvasFrame(state.currentTime);
 }
 
 // ==========================================
@@ -1745,7 +2143,8 @@ async function renderVideoWithFfmpeg() {
   }
 
   if (!state.ffmpegAvailable) {
-    alert('FFmpeg was not detected on the server. Please install FFmpeg (via install_ffmpeg.bat) or use "Render & Watch Live Video".');
+    console.info('Server FFmpeg not active; seamlessly rendering via browser studio engine.');
+    renderVideoLive();
     return;
   }
   if (!state.audioFile) {
@@ -1825,6 +2224,10 @@ function parseAndUpdateLyrics() {
   state.lyricsRaw = dom.lyricsTextarea.value;
   state.segments = parseManualTimestamps(state.lyricsRaw);
   dom.parsedCountBadge.textContent = `${state.segments.length} lines parsed`;
+  if (dom.lineMgrCount) dom.lineMgrCount.textContent = state.segments.length;
+  if (dom.lineManagerPanel && dom.lineManagerPanel.style.display !== 'none' && getComputedStyle(dom.lineManagerPanel).display !== 'none') {
+    renderLineManagerList();
+  }
   renderCanvasFrame(state.currentTime);
 }
 
@@ -2044,6 +2447,9 @@ function initEventListeners() {
       }
     }
   });
+
+  // Lyric Line Builder & Timing Adjuster Engine
+  setupLineBuilderAndManager();
 }
 
 // ==========================================
