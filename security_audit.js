@@ -111,7 +111,7 @@ const envPath = path.join(__dirname, '.env');
 const envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
 const rawHash = process.env.ADMIN_PASSWORD_HASH || (envContent.match(/ADMIN_PASSWORD_HASH=([^\r\n]+)/) ? envContent.match(/ADMIN_PASSWORD_HASH=([^\r\n]+)/)[1] : '');
 
-if (rawHash) {
+if (rawHash && !rawHash.includes('[SENSITIVE]')) {
   const hashMatch = rawHash.match(/([a-f0-9]{32}:[a-f0-9]{128})/);
   check(
     'ADMIN_PASSWORD_HASH properly formatted in .env (salt:hash)',

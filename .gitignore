@@ -33,6 +33,7 @@ secrets/
 
 # Cloud Deployments
 .vercel/
+.vercel_python_packages/
 
 # Editor & Workspace
 .vscode/
