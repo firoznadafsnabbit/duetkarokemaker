@@ -295,47 +295,7 @@
               <div class="yt-input-group">
                 <input type="text" id="yt-url-input" class="yt-input"
                   placeholder="Paste YouTube Link (e.g. https://youtu.be/...)" autocomplete="off" aria-label="YouTube video URL">
-              </div>
-            </div>
-
-            <!-- Options Row -->
-            <div class="autopilot-options-row">
-              <label class="autopilot-check-label">
-                <input type="checkbox" id="chk-auto-render-video" checked>
-                <span>Auto-render 1080p video after processing</span>
-              </label>
-            </div>
-
-            <!-- Big Action Button -->
-            <button type="button" id="btn-run-autopilot" class="btn btn-autopilot">
-              <span>Generate Duet Karaoke Video</span>
-            </button>
-
-            <!-- Multi-Step Pipeline Tracker -->
-            <div class="autopilot-stepper" id="autopilot-stepper" style="display: none;">
-              <div class="stepper-header">
-                <span id="stepper-status-title">Processing Audio Pipeline...</span>
-                <span id="stepper-pct-label">0%</span>
-              </div>
-              <div class="stepper-bar-track">
-                <div class="stepper-bar-fill" id="stepper-bar-fill"></div>
-              </div>
-              <div class="stepper-items-list">
-                <div class="stepper-item" id="step-item-1">
-                  <span id="step-text-1">1. Audio Analysis</span>
-                </div>
-                <div class="stepper-item" id="step-item-2">
-                  <span id="step-text-2">2. User Lyrics Validation</span>
-                </div>
-                <div class="stepper-item" id="step-item-3">
-                  <span id="step-text-3">3. Duet Layout & Styling</span>
-                </div>
-                <div class="stepper-item" id="step-item-4">
-                  <span id="step-text-4">4. Video Generation (1080p)</span>
-                </div>
-                <div class="stepper-item" id="step-item-5">
-                  <span id="step-text-5">5. Complete & Ready to Download</span>
-                </div>
+                <button type="button" id="btn-fetch-yt" class="btn btn-primary btn-sm">Load Song Audio</button>
               </div>
             </div>
           </div>
