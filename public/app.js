@@ -2431,35 +2431,17 @@ function initEventListeners() {
     seekToTime(parseFloat(e.target.value));
   });
 
-  // Full-Width Preview Action Row Button
-  dom.btnPreviewKaraoke?.addEventListener('click', () => {
-    dom.stageWrapper?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    if (!state.isPlaying && (state.audioDuration > 0 || state.audioElement.src)) {
-      togglePlay();
-    }
-  });
-
-  // Stage & Fullscreen Controls
-  dom.btnFullscreen?.addEventListener('click', () => {
-    const elem = dom.stageWrapper || dom.canvas;
-    if (!document.fullscreenElement) {
-      elem.requestFullscreen?.().catch(() => {});
-    } else {
-      document.exitFullscreen?.().catch(() => {});
-    }
-  });
-
-  dom.chkShowGuides?.addEventListener('change', e => {
-    if (dom.canvasGuide) dom.canvasGuide.style.display = e.target.checked ? 'block' : 'none';
-  });
-
   dom.btnDismissRecordAlert?.addEventListener('click', () => {
     dismissScreenCaptureDetection();
   });
 
-  // Keyboard navigation shortcuts (Space = play/pause, Left/Right = seek 5s)
+  // Keyboard navigation shortcuts (Space = play/pause, Left/Right = seek 5s, Esc = exit fullscreen)
   window.addEventListener('keydown', (e) => {
     if (['INPUT', 'TEXTAREA'].includes(e.target?.tagName)) return;
+    if (e.key === 'Escape' && dom.stageWrapper?.classList.contains('theater-fullscreen-active')) {
+      toggleStageFullscreen();
+      return;
+    }
     if (e.code === 'Space') {
       e.preventDefault();
       togglePlay();
@@ -2532,17 +2514,108 @@ function initEventListeners() {
   dom.btnTapSyncAction?.addEventListener('click', markTapSyncLine);
   dom.btnTapSyncReset?.addEventListener('click', setupTapSync);
 
-  // Guide Toggle & Fullscreen
-  dom.chkShowGuides.addEventListener('change', e => {
-    dom.canvasGuide.style.display = e.target.checked ? 'block' : 'none';
+  // Guide Toggle
+  dom.chkShowGuides?.addEventListener('change', e => {
+    if (dom.canvasGuide) dom.canvasGuide.style.display = e.target.checked ? 'block' : 'none';
   });
 
-  dom.btnFullscreen.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      dom.stageWrapper.requestFullscreen().catch(err => alert(err.message));
-    } else {
-      document.exitFullscreen();
+  // Unified Fullscreen Toggle with Native Support & Seamless Theater Fallback (Zero Alerts)
+  function updateStageFullscreenUI(isActive) {
+    if (dom.btnFullscreen) {
+      dom.btnFullscreen.textContent = isActive ? '✕' : '⛶';
+      dom.btnFullscreen.title = isActive ? 'Exit Fullscreen (Esc)' : 'Fullscreen Preview';
+      dom.btnFullscreen.classList.toggle('active', isActive);
     }
+    const exitBtn = $('btn-stage-exit-fs');
+    if (exitBtn) {
+      exitBtn.style.display = isActive ? 'inline-flex' : 'none';
+    }
+  }
+
+  function toggleStageFullscreen() {
+    const elem = dom.stageWrapper || dom.canvas;
+    if (!elem) return;
+
+    const isNativeFs = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+    const isTheaterFs = elem.classList.contains('theater-fullscreen-active');
+
+    // If currently fullscreen in either mode, exit cleanly
+    if (isNativeFs) {
+      try {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      } catch {}
+      elem.classList.remove('theater-fullscreen-active');
+      document.body.classList.remove('theater-mode-open');
+      updateStageFullscreenUI(false);
+      return;
+    }
+
+    if (isTheaterFs) {
+      elem.classList.remove('theater-fullscreen-active');
+      document.body.classList.remove('theater-mode-open');
+      updateStageFullscreenUI(false);
+      return;
+    }
+
+    // Try native browser element fullscreen; if denied or permission fails, fallback to Theater Mode
+    const requestFs = elem.requestFullscreen ||
+                      elem.webkitRequestFullscreen ||
+                      elem.mozRequestFullScreen ||
+                      elem.msRequestFullscreen;
+
+    if (requestFs) {
+      try {
+        const promise = requestFs.call(elem);
+        if (promise && typeof promise.then === 'function') {
+          promise.then(() => {
+            updateStageFullscreenUI(true);
+          }).catch(() => {
+            // Permissions check failed or restricted — seamless Theater Fullscreen fallback without popup
+            elem.classList.add('theater-fullscreen-active');
+            document.body.classList.add('theater-mode-open');
+            updateStageFullscreenUI(true);
+          });
+        } else {
+          updateStageFullscreenUI(true);
+        }
+      } catch {
+        elem.classList.add('theater-fullscreen-active');
+        document.body.classList.add('theater-mode-open');
+        updateStageFullscreenUI(true);
+      }
+    } else {
+      elem.classList.add('theater-fullscreen-active');
+      document.body.classList.add('theater-mode-open');
+      updateStageFullscreenUI(true);
+    }
+  }
+
+  dom.btnFullscreen?.addEventListener('click', toggleStageFullscreen);
+  $('btn-stage-exit-fs')?.addEventListener('click', toggleStageFullscreen);
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      const isNative = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+      if (!isNative && dom.stageWrapper) {
+        dom.stageWrapper.classList.remove('theater-fullscreen-active');
+        document.body.classList.remove('theater-mode-open');
+      }
+      updateStageFullscreenUI(isNative || dom.stageWrapper?.classList.contains('theater-fullscreen-active'));
+    });
   });
 
   // Export Subtitle (.ASS - Free text export)
