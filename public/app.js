@@ -1517,7 +1517,12 @@ function toggleFullscreenLyrics() {
   }
 }
 
+let isLineBuilderSetup = false;
+
 function setupLineBuilderAndManager() {
+  if (isLineBuilderSetup) return;
+  isLineBuilderSetup = true;
+
   // 1. Fullscreen Studio Toggle
   dom.btnFullscreenLyrics?.addEventListener('click', toggleFullscreenLyrics);
   dom.fsBtnExit?.addEventListener('click', toggleFullscreenLyrics);
@@ -1583,14 +1588,26 @@ function setupLineBuilderAndManager() {
   const nudgeTime = (inputEl, delta) => {
     if (!inputEl) return;
     const curSec = TimeUtil.toSeconds(inputEl.value);
-    const newSec = Math.max(0, curSec + delta);
+    const newSec = Math.max(0, Math.round((curSec + delta) * 100) / 100);
     inputEl.value = TimeUtil.toDisplay(newSec);
   };
 
-  dom.btnStartMinus05?.addEventListener('click', () => nudgeTime(dom.builderStartTime, -0.5));
-  dom.btnStartPlus05?.addEventListener('click', () => nudgeTime(dom.builderStartTime, 0.5));
-  dom.btnEndMinus05?.addEventListener('click', () => nudgeTime(dom.builderEndTime, -0.5));
-  dom.btnEndPlus05?.addEventListener('click', () => nudgeTime(dom.builderEndTime, 0.5));
+  dom.btnStartMinus05?.addEventListener('click', (e) => {
+    e.preventDefault();
+    nudgeTime(dom.builderStartTime, -0.5);
+  });
+  dom.btnStartPlus05?.addEventListener('click', (e) => {
+    e.preventDefault();
+    nudgeTime(dom.builderStartTime, 0.5);
+  });
+  dom.btnEndMinus05?.addEventListener('click', (e) => {
+    e.preventDefault();
+    nudgeTime(dom.builderEndTime, -0.5);
+  });
+  dom.btnEndPlus05?.addEventListener('click', (e) => {
+    e.preventDefault();
+    nudgeTime(dom.builderEndTime, 0.5);
+  });
 
   // 6. Preset duration chips (+3s, +5s, +8s)
   document.querySelectorAll('.btn-dur-chip').forEach(chip => {
@@ -2813,7 +2830,6 @@ function dismissScreenCaptureDetection() {
 
 window.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
-  setupLineBuilderAndManager();
   checkServerStatus();
   initAntiRecordingProtection();
   parseAndUpdateLyrics();
