@@ -299,32 +299,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Audio Player & Scrubber Bar -->
-          <div class="audio-player-bar" id="audio-player-bar">
-            <button class="player-btn play-pause-btn" id="btn-play-pause" title="Play/Pause (Spacebar)">
-              <svg id="play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <polygon points="6 3 20 12 6 21 6 3"></polygon>
-              </svg>
-              <svg id="pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"
-                style="display: none;">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-            </button>
-            <div class="time-display" id="time-display">00:00.00 / 00:00.00</div>
-            <div class="scrubber-container">
-              <input type="range" id="time-scrubber" min="0" max="100" value="0" step="0.05" class="scrubber">
-            </div>
-            <div class="speed-select-wrap">
-              <select id="playback-speed" class="speed-select" title="Playback Speed">
-                <option value="0.5">0.5x</option>
-                <option value="0.75">0.75x</option>
-                <option value="1.0" selected>1.0x</option>
-                <option value="1.25">1.25x</option>
-              </select>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -636,6 +610,32 @@ Tip: You can also use the 'Line-by-Line Studio' tab above for visual editing!"><
               <div class="record-alert-note">💡 Use the <strong>Download Duet Karaoke Video (.MP4)</strong> button below to generate a clean, unwatermarked 1080p video file.</div>
               <button type="button" class="btn btn-secondary btn-sm" id="btn-dismiss-record-alert">Resume Preview</button>
             </div>
+          </div>
+        </div>
+
+        <!-- Audio Player & Scrubber Bar (Directly below preview screen) -->
+        <div class="audio-player-bar" id="audio-player-bar">
+          <button class="player-btn play-pause-btn" id="btn-play-pause" title="Play/Pause (Spacebar)">
+            <svg id="play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <polygon points="6 3 20 12 6 21 6 3"></polygon>
+            </svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"
+              style="display: none;">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          </button>
+          <div class="time-display" id="time-display">00:00.00 / 00:00.00</div>
+          <div class="scrubber-container">
+            <input type="range" id="time-scrubber" min="0" max="100" value="0" step="0.05" class="scrubber">
+          </div>
+          <div class="speed-select-wrap">
+            <select id="playback-speed" class="speed-select" title="Playback Speed">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1.0" selected>1.0x</option>
+              <option value="1.25">1.25x</option>
+            </select>
           </div>
         </div>
 
