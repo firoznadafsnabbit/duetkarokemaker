@@ -125,14 +125,30 @@ const dom = {
   fontSizeSlider: $('font-size-slider'),
   fontSizeVal: $('font-size-val'),
 
-  // Lyrics Editor & Tap Sync Tabs
+  // Lyrics Studio Tabs & Fullscreen Controls
+  tabLineEditor: $('tab-line-editor'),
   tabEditor: $('tab-editor'),
   tabTapSync: $('tab-tap-sync'),
+  paneLineEditor: $('pane-line-editor'),
   paneEditor: $('pane-editor'),
   paneTapSync: $('pane-tap-sync'),
+  lyricsPanel: $('lyrics-panel'),
+  btnFullscreenLyrics: $('btn-fullscreen-lyrics'),
+  fsIcon: $('fs-icon'),
+  fsText: $('fs-text'),
+  lyricsFullscreenBar: $('lyrics-fullscreen-bar'),
+  fsBtnPlayPause: $('fs-btn-play-pause'),
+  fsPlayIcon: $('fs-play-icon'),
+  fsTimeDisplay: $('fs-time-display'),
+  fsTimeScrubber: $('fs-time-scrubber'),
+  fsBtnExit: $('fs-btn-exit'),
+
+  // Lyrics Inputs & Badges
   lyricsTextarea: $('lyrics-textarea'),
   parsedCountBadge: $('parsed-count-badge'),
+  rawCountBadge: $('raw-count-badge'),
   btnFormatCheck: $('btn-format-check'),
+  btnFormatCheckRaw: $('btn-format-check-raw'),
   btnTapSyncAction: $('btn-tap-sync-action'),
   btnTapSyncReset: $('btn-tap-sync-reset'),
   tapSyncLinesList: $('tap-sync-lines-list'),
@@ -140,6 +156,8 @@ const dom = {
   // Lyric Line Builder & Timing Adjuster Elements
   btnToggleLineBuilder: $('btn-toggle-line-builder'),
   btnBoxQuickAdd: $('btn-box-quick-add'),
+  btnSwitchToLines: $('btn-switch-to-lines'),
+  btnScrollAddLine: $('btn-scroll-add-line'),
   lineBuilderPanel: $('line-builder-panel'),
   builderLiveSongTime: $('builder-live-song-time'),
   builderVoiceGroup: $('builder-voice-group'),
@@ -895,8 +913,12 @@ function animationLoop(now = performance.now()) {
 
 function updateTimeDisplay() {
   const dur = state.audioDuration || 32;
+  const dispStr = `${TimeUtil.toDisplay(state.currentTime)} / ${TimeUtil.toDisplay(dur)}`;
   if (dom.timeDisplay) {
-    dom.timeDisplay.textContent = `${TimeUtil.toDisplay(state.currentTime)} / ${TimeUtil.toDisplay(dur)}`;
+    dom.timeDisplay.textContent = dispStr;
+  }
+  if (dom.fsTimeDisplay) {
+    dom.fsTimeDisplay.textContent = dispStr;
   }
   if (dom.builderLiveSongTime) {
     dom.builderLiveSongTime.textContent = TimeUtil.toDisplay(state.currentTime);
@@ -911,12 +933,17 @@ function updateTimeDisplay() {
     dom.previewTimeScrubber.max = dur;
     dom.previewTimeScrubber.value = state.currentTime;
   }
+  if (dom.fsTimeScrubber) {
+    dom.fsTimeScrubber.max = dur;
+    dom.fsTimeScrubber.value = state.currentTime;
+  }
 }
 
 function setPlaybackState(isPlaying) {
   state.isPlaying = isPlaying;
   if (dom.playIcon) dom.playIcon.style.display = isPlaying ? 'none' : 'block';
   if (dom.pauseIcon) dom.pauseIcon.style.display = isPlaying ? 'block' : 'none';
+  if (dom.fsPlayIcon) dom.fsPlayIcon.textContent = isPlaying ? '⏸' : '▶';
   if (dom.previewPlayIcon) dom.previewPlayIcon.style.display = isPlaying ? 'none' : 'block';
   if (dom.previewPauseIcon) dom.previewPauseIcon.style.display = isPlaying ? 'block' : 'none';
   if (dom.btnCanvasBigPlay) dom.btnCanvasBigPlay.style.display = isPlaying ? 'none' : 'flex';
@@ -957,6 +984,7 @@ function seekToTime(t) {
     state.audioElement.currentTime = clamped;
   }
   if (dom.timeScrubber) dom.timeScrubber.value = clamped;
+  if (dom.fsTimeScrubber) dom.fsTimeScrubber.value = clamped;
   if (dom.previewTimeScrubber) dom.previewTimeScrubber.value = clamped;
   updateTimeDisplay();
   renderCanvasFrame(clamped);
@@ -974,6 +1002,7 @@ function loadAudioFile(file) {
     state.audioDuration = state.audioElement.duration || 0;
     dom.audioDuration.textContent = TimeUtil.toDisplay(state.audioDuration);
     dom.timeScrubber.max = state.audioDuration;
+    if (dom.fsTimeScrubber) dom.fsTimeScrubber.max = state.audioDuration;
     if (dom.previewTimeScrubber) dom.previewTimeScrubber.max = state.audioDuration;
     if (dom.previewTotalDuration) dom.previewTotalDuration.textContent = formatClockTime(state.audioDuration);
     state.currentTime = 0;
@@ -1475,15 +1504,39 @@ function auditionAudioRange(startSec, endSec) {
   }, durationMs);
 }
 
+function toggleFullscreenLyrics() {
+  if (!dom.lyricsPanel) return;
+  const isActive = dom.lyricsPanel.classList.toggle('fullscreen-active');
+  document.body.style.overflow = isActive ? 'hidden' : '';
+  if (dom.fsIcon) dom.fsIcon.textContent = isActive ? '✕' : '⛶';
+  if (dom.fsText) dom.fsText.textContent = isActive ? 'Exit Fullscreen' : 'Fullscreen';
+  if (dom.btnFullscreenLyrics) dom.btnFullscreenLyrics.classList.toggle('active', isActive);
+  if (isActive) {
+    dom.lyricsPanel.scrollTop = 0;
+    renderLineManagerList();
+  }
+}
+
 function setupLineBuilderAndManager() {
-  // 1. Toggle Line Builder Panel
+  // 1. Fullscreen Studio Toggle
+  dom.btnFullscreenLyrics?.addEventListener('click', toggleFullscreenLyrics);
+  dom.fsBtnExit?.addEventListener('click', toggleFullscreenLyrics);
+  dom.fsBtnPlayPause?.addEventListener('click', togglePlay);
+  dom.fsTimeScrubber?.addEventListener('input', (e) => seekToTime(parseFloat(e.target.value)));
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dom.lyricsPanel?.classList.contains('fullscreen-active')) {
+      toggleFullscreenLyrics();
+    }
+  });
+
+  // 2. Toggle Line Builder Panel / Focus
   const toggleBuilder = () => {
     if (!dom.lineBuilderPanel) return;
     const isHidden = dom.lineBuilderPanel.style.display === 'none' || getComputedStyle(dom.lineBuilderPanel).display === 'none';
     dom.lineBuilderPanel.style.display = isHidden ? 'flex' : 'none';
     if (isHidden) {
       dom.builderLineText?.focus();
-      // If start time is 00:00.00 and audio has progressed, sync with song audio position
       if (dom.builderStartTime && (!dom.builderStartTime.value || dom.builderStartTime.value === '00:00.00') && state.currentTime > 0) {
         dom.builderStartTime.value = TimeUtil.toDisplay(state.currentTime);
         dom.builderEndTime.value = TimeUtil.toDisplay(state.currentTime + 5.0);
@@ -1493,14 +1546,18 @@ function setupLineBuilderAndManager() {
 
   dom.btnToggleLineBuilder?.addEventListener('click', toggleBuilder);
   dom.btnBoxQuickAdd?.addEventListener('click', () => {
-    if (dom.lineBuilderPanel && (dom.lineBuilderPanel.style.display === 'none' || getComputedStyle(dom.lineBuilderPanel).display === 'none')) {
-      toggleBuilder();
-    } else {
-      dom.builderLineText?.focus();
-    }
+    if (dom.tabLineEditor) dom.tabLineEditor.click();
+    dom.builderLineText?.focus();
+  });
+  dom.btnSwitchToLines?.addEventListener('click', () => {
+    if (dom.tabLineEditor) dom.tabLineEditor.click();
+  });
+  dom.btnScrollAddLine?.addEventListener('click', () => {
+    dom.builderLineText?.focus();
+    dom.lineBuilderPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
-  // 2. Voice Pills Selector
+  // 3. Voice Pills Selector
   if (dom.builderVoiceGroup) {
     dom.builderVoiceGroup.querySelectorAll('.voice-pill').forEach(pill => {
       pill.addEventListener('click', () => {
@@ -1511,7 +1568,7 @@ function setupLineBuilderAndManager() {
     });
   }
 
-  // 3. Audio Time Capture buttons (⏱️ Set from Song)
+  // 4. Audio Time Capture buttons (⏱️ Set from Song)
   dom.btnSyncStartAudio?.addEventListener('click', () => {
     const curTime = state.currentTime || (state.audioElement ? state.audioElement.currentTime : 0);
     if (dom.builderStartTime) dom.builderStartTime.value = TimeUtil.toDisplay(curTime);
@@ -1522,7 +1579,7 @@ function setupLineBuilderAndManager() {
     if (dom.builderEndTime) dom.builderEndTime.value = TimeUtil.toDisplay(curTime);
   });
 
-  // 4. Nudge buttons (-0.5s / +0.5s)
+  // 5. Nudge buttons (-0.5s / +0.5s)
   const nudgeTime = (inputEl, delta) => {
     if (!inputEl) return;
     const curSec = TimeUtil.toSeconds(inputEl.value);
@@ -1535,7 +1592,7 @@ function setupLineBuilderAndManager() {
   dom.btnEndMinus05?.addEventListener('click', () => nudgeTime(dom.builderEndTime, -0.5));
   dom.btnEndPlus05?.addEventListener('click', () => nudgeTime(dom.builderEndTime, 0.5));
 
-  // 5. Preset duration chips (+3s, +5s, +8s)
+  // 6. Preset duration chips (+3s, +5s, +8s)
   document.querySelectorAll('.btn-dur-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const dur = parseFloat(chip.getAttribute('data-dur') || '5');
@@ -1546,7 +1603,7 @@ function setupLineBuilderAndManager() {
     });
   });
 
-  // 6. Audition button (▶ Test Audio Range)
+  // 7. Audition button (▶ Test Audio Range)
   dom.btnAuditionRange?.addEventListener('click', () => {
     const s = TimeUtil.toSeconds(dom.builderStartTime?.value || '0');
     const e = TimeUtil.toSeconds(dom.builderEndTime?.value || '0');
@@ -1557,7 +1614,7 @@ function setupLineBuilderAndManager() {
     auditionAudioRange(s, e);
   });
 
-  // 7. Submit button (+ Add Line to Box)
+  // 8. Submit button (+ Add Line to Box)
   dom.btnSubmitAddLine?.addEventListener('click', handleAddLineSubmit);
   dom.builderLineText?.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
@@ -1566,13 +1623,8 @@ function setupLineBuilderAndManager() {
     }
   });
 
-  // 8. Line Manager toggle
-  dom.btnToggleLineManager?.addEventListener('click', () => {
-    if (!dom.lineManagerPanel) return;
-    const isHidden = dom.lineManagerPanel.style.display === 'none' || getComputedStyle(dom.lineManagerPanel).display === 'none';
-    dom.lineManagerPanel.style.display = isHidden ? 'flex' : 'none';
-    if (isHidden) renderLineManagerList();
-  });
+  // 9. Format check buttons
+  dom.btnFormatCheckRaw?.addEventListener('click', parseAndUpdateLyrics);
 }
 
 function handleAddLineSubmit() {
@@ -1618,12 +1670,19 @@ function renderLineManagerList() {
   if (!dom.lineManagerList) return;
   dom.lineManagerList.innerHTML = '';
 
-  if (dom.lineMgrCount) {
-    dom.lineMgrCount.textContent = state.segments.length;
-  }
+  const totalLines = state.segments.length;
+  if (dom.parsedCountBadge) dom.parsedCountBadge.textContent = `${totalLines} lines parsed`;
+  if (dom.rawCountBadge) dom.rawCountBadge.textContent = `${totalLines} lines parsed`;
+  if (dom.lineMgrCount) dom.lineMgrCount.textContent = totalLines;
 
-  if (state.segments.length === 0) {
-    dom.lineManagerList.innerHTML = '<p class="placeholder-text" style="padding:14px;text-align:center;color:var(--text-muted);font-size:0.8rem;">No lyrics lines parsed yet. Use <strong>+ Add Line to Box</strong> above or paste lyrics in the box.</p>';
+  if (totalLines === 0) {
+    dom.lineManagerList.innerHTML = `
+      <div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:0.84rem;">
+        <span style="font-size:1.4rem;display:block;margin-bottom:6px;">🎵</span>
+        No lyrics lines entered yet.<br>
+        Type your first line in <strong>Add Lyric Line &amp; Sync Time</strong> above and click <strong>+ Add Line to Studio</strong>, or paste lyrics in <strong>Text Editor</strong>.
+      </div>
+    `;
     return;
   }
 
@@ -1633,7 +1692,7 @@ function renderLineManagerList() {
 
     // Index
     const indexSpan = document.createElement('span');
-    indexSpan.style.cssText = 'font-size:0.75rem;font-weight:700;color:var(--text-faint);min-width:24px;';
+    indexSpan.className = 'line-index-badge';
     indexSpan.textContent = `#${idx + 1}`;
     row.appendChild(indexSpan);
 
@@ -1655,6 +1714,26 @@ function renderLineManagerList() {
     const startGroup = document.createElement('div');
     startGroup.className = 'line-time-group';
 
+    const startInput = document.createElement('input');
+    startInput.type = 'text';
+    startInput.className = 'line-time-input-sm';
+    startInput.value = TimeUtil.toDisplay(seg.start);
+    startInput.title = 'Start Time';
+
+    const endInput = document.createElement('input');
+    endInput.type = 'text';
+    endInput.className = 'line-time-input-sm';
+    endInput.value = TimeUtil.toDisplay(seg.end);
+    endInput.title = 'End Time';
+
+    const durBadge = document.createElement('span');
+    durBadge.className = 'line-dur-badge';
+    const updateDurDisplay = () => {
+      const durSec = Math.max(0, seg.end - seg.start);
+      durBadge.textContent = `${durSec.toFixed(1)}s`;
+    };
+    updateDurDisplay();
+
     const btnStartMinus = document.createElement('button');
     btnStartMinus.type = 'button';
     btnStartMinus.className = 'line-btn-mini';
@@ -1662,16 +1741,14 @@ function renderLineManagerList() {
     btnStartMinus.textContent = '-.2';
     btnStartMinus.addEventListener('click', () => {
       seg.start = Math.max(0, seg.start - 0.2);
+      startInput.value = TimeUtil.toDisplay(seg.start);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
-    const startInput = document.createElement('input');
-    startInput.type = 'text';
-    startInput.className = 'line-time-input-sm';
-    startInput.value = TimeUtil.toDisplay(seg.start);
-    startInput.title = 'Start Time';
     startInput.addEventListener('change', () => {
       seg.start = TimeUtil.toSeconds(startInput.value);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
@@ -1682,6 +1759,8 @@ function renderLineManagerList() {
     btnStartPlus.textContent = '+.2';
     btnStartPlus.addEventListener('click', () => {
       seg.start = seg.start + 0.2;
+      startInput.value = TimeUtil.toDisplay(seg.start);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
@@ -1692,6 +1771,8 @@ function renderLineManagerList() {
     btnSyncStart.textContent = '⏱️';
     btnSyncStart.addEventListener('click', () => {
       seg.start = state.currentTime;
+      startInput.value = TimeUtil.toDisplay(seg.start);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
@@ -1718,16 +1799,14 @@ function renderLineManagerList() {
     btnEndMinus.textContent = '-.2';
     btnEndMinus.addEventListener('click', () => {
       seg.end = Math.max(seg.start + 0.2, seg.end - 0.2);
+      endInput.value = TimeUtil.toDisplay(seg.end);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
-    const endInput = document.createElement('input');
-    endInput.type = 'text';
-    endInput.className = 'line-time-input-sm';
-    endInput.value = TimeUtil.toDisplay(seg.end);
-    endInput.title = 'End Time';
     endInput.addEventListener('change', () => {
       seg.end = Math.max(seg.start + 0.2, TimeUtil.toSeconds(endInput.value));
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
@@ -1738,6 +1817,8 @@ function renderLineManagerList() {
     btnEndPlus.textContent = '+.2';
     btnEndPlus.addEventListener('click', () => {
       seg.end = seg.end + 0.2;
+      endInput.value = TimeUtil.toDisplay(seg.end);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
@@ -1748,6 +1829,8 @@ function renderLineManagerList() {
     btnSyncEnd.textContent = '⏱️';
     btnSyncEnd.addEventListener('click', () => {
       seg.end = Math.max(seg.start + 0.2, state.currentTime);
+      endInput.value = TimeUtil.toDisplay(seg.end);
+      updateDurDisplay();
       syncSegmentsToTextarea();
     });
 
@@ -1757,14 +1840,17 @@ function renderLineManagerList() {
     endGroup.appendChild(btnSyncEnd);
     row.appendChild(endGroup);
 
+    // Duration Badge
+    row.appendChild(durBadge);
+
     // Lyrics Text Input
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = 'line-text-input-main';
     textInput.value = seg.text || '';
     textInput.placeholder = 'Lyrics text...';
-    textInput.addEventListener('change', () => {
-      seg.text = textInput.value.trim();
+    textInput.addEventListener('input', () => {
+      seg.text = textInput.value;
       syncSegmentsToTextarea();
     });
     row.appendChild(textInput);
@@ -1789,6 +1875,7 @@ function renderLineManagerList() {
     btnDelete.addEventListener('click', () => {
       state.segments.splice(idx, 1);
       syncSegmentsToTextarea();
+      renderLineManagerList();
     });
     row.appendChild(btnDelete);
 
@@ -1807,7 +1894,8 @@ function syncSegmentsToTextarea() {
   dom.lyricsTextarea.value = formatted;
   state.lyricsRaw = formatted;
   state.segments = parseManualTimestamps(state.lyricsRaw);
-  dom.parsedCountBadge.textContent = `${state.segments.length} lines parsed`;
+  if (dom.parsedCountBadge) dom.parsedCountBadge.textContent = `${state.segments.length} lines parsed`;
+  if (dom.rawCountBadge) dom.rawCountBadge.textContent = `${state.segments.length} lines parsed`;
   if (dom.lineMgrCount) dom.lineMgrCount.textContent = state.segments.length;
   renderCanvasFrame(state.currentTime);
 }
@@ -2418,24 +2506,31 @@ function initEventListeners() {
     });
   });
 
-  // Tabs: Editor vs Tap-to-Sync
-  dom.tabEditor.addEventListener('click', () => {
-    dom.tabEditor.classList.add('active');
-    dom.tabTapSync.classList.remove('active');
-    dom.paneEditor.classList.add('active');
-    dom.paneTapSync.classList.remove('active');
-  });
+  // Lyrics Studio Tabs (Line-by-Line Studio vs Raw Text Editor vs Tap-to-Sync)
+  const switchLyricsTab = (tabName) => {
+    // Buttons
+    dom.tabLineEditor?.classList.toggle('active', tabName === 'line');
+    dom.tabEditor?.classList.toggle('active', tabName === 'text');
+    dom.tabTapSync?.classList.toggle('active', tabName === 'tap');
 
-  dom.tabTapSync.addEventListener('click', () => {
-    dom.tabTapSync.classList.add('active');
-    dom.tabEditor.classList.remove('active');
-    dom.paneTapSync.classList.add('active');
-    dom.paneEditor.classList.remove('active');
-    setupTapSync();
-  });
+    // Panes
+    dom.paneLineEditor?.classList.toggle('active', tabName === 'line');
+    dom.paneEditor?.classList.toggle('active', tabName === 'text');
+    dom.paneTapSync?.classList.toggle('active', tabName === 'tap');
 
-  dom.btnTapSyncAction.addEventListener('click', markTapSyncLine);
-  dom.btnTapSyncReset.addEventListener('click', setupTapSync);
+    if (tabName === 'line') {
+      renderLineManagerList();
+    } else if (tabName === 'tap') {
+      setupTapSync();
+    }
+  };
+
+  dom.tabLineEditor?.addEventListener('click', () => switchLyricsTab('line'));
+  dom.tabEditor?.addEventListener('click', () => switchLyricsTab('text'));
+  dom.tabTapSync?.addEventListener('click', () => switchLyricsTab('tap'));
+
+  dom.btnTapSyncAction?.addEventListener('click', markTapSyncLine);
+  dom.btnTapSyncReset?.addEventListener('click', setupTapSync);
 
   // Guide Toggle & Fullscreen
   dom.chkShowGuides.addEventListener('change', e => {
@@ -2645,8 +2740,11 @@ function dismissScreenCaptureDetection() {
 
 window.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
+  setupLineBuilderAndManager();
   checkServerStatus();
   initAntiRecordingProtection();
+  parseAndUpdateLyrics();
+  renderLineManagerList();
   renderCanvasFrame(0);
   animationLoop();
 });

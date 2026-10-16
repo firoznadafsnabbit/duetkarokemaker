@@ -368,10 +368,8 @@
         </div>
       </section>
 
-      <!-- Right Column (2nd Image): Styling & Duet Colors + Timestamped Lyrics -->
-      <section class="panel lyrics-panel lyrics-section" id="lyrics-panel">
-
-        <!-- Step 2: Styling & Duet Colors -->
+      <!-- Right Column (2nd Image): Step 2 Styling & Duet Colors -->
+      <section class="panel settings-panel" id="settings-panel">
         <div class="panel-section">
           <div class="section-title-row">
             <span class="step-num">2</span>
@@ -422,34 +420,49 @@
             <input type="range" id="font-size-slider" min="40" max="160" value="85" step="1">
           </div>
         </div>
+      </section>
 
-        <!-- Step 3: Timestamped Lyrics -->
-        <div class="section-title-row">
-          <span class="step-num">3</span>
-          <h2>Timestamped Lyrics</h2>
-          <div class="mode-toggles">
-            <button class="mode-btn active" id="tab-editor">Text Editor</button>
-            <button class="mode-btn" id="tab-tap-sync">Tap to Sync</button>
+      <!-- Full-Width Lyrics Studio (Step 3): Lyrics Add & Line-by-Line Edits + Fullscreen Mode -->
+      <section class="panel lyrics-panel lyrics-section" id="lyrics-panel">
+        <div class="lyrics-header-row">
+          <div class="section-title-row">
+            <span class="step-num">3</span>
+            <h2>Timestamped Lyrics Studio</h2>
+            <span class="studio-fullwidth-badge">Full Width Studio</span>
+          </div>
+
+          <div class="lyrics-header-actions">
+            <div class="mode-toggles">
+              <button class="mode-btn active" id="tab-line-editor" title="Line-by-line visual timing & text editor">⚡ Line-by-Line Studio</button>
+              <button class="mode-btn" id="tab-editor" title="Direct raw text & timestamps editor">📝 Text Editor</button>
+              <button class="mode-btn" id="tab-tap-sync" title="Real-time rhythm tapping">⏱️ Tap to Sync</button>
+            </div>
+            <button type="button" class="btn-fullscreen-lyrics" id="btn-fullscreen-lyrics" title="Toggle Fullscreen Lyrics Studio">
+              <span id="fs-icon">⛶</span>
+              <span id="fs-text">Fullscreen</span>
+            </button>
           </div>
         </div>
 
-        <!-- Tab 1: Direct Text Editor with Line Adder & Timestamp Adjuster -->
-        <div class="tab-pane active" id="pane-editor">
-          <div class="quick-tags-bar">
-            <span class="hint-small">Quick Actions:</span>
-            <button type="button" class="btn-builder-toggle active" id="btn-toggle-line-builder" title="Add line of text with adjustable timings">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              <span>Add Line &amp; Timing</span>
+        <!-- Sticky Floating Audio Transport Bar (Visible in Fullscreen Mode or on Demand) -->
+        <div class="lyrics-fullscreen-bar" id="lyrics-fullscreen-bar">
+          <div class="fs-bar-left">
+            <button type="button" class="player-btn fs-play-btn" id="fs-btn-play-pause" title="Play / Pause Audio (Space)">
+              <span id="fs-play-icon">▶</span>
             </button>
-            <button class="tag-insert-btn tag-1-btn" data-tag="[1]">+ [1] Male</button>
-            <button class="tag-insert-btn tag-2-btn" data-tag="[2]">+ [2] Female</button>
-            <button class="tag-insert-btn tag-3-btn" data-tag="[3]">+ [3] Both</button>
-            <span class="syntax-info" title="Supports [00:00 - 00:10] and 00:00,00:10">ℹ️ Syntax Help</span>
+            <span class="fs-time-display" id="fs-time-display">00:00.00 / 00:00.00</span>
           </div>
+          <div class="fs-scrubber-box">
+            <input type="range" class="scrubber" id="fs-time-scrubber" min="0" max="100" value="0" step="0.05">
+          </div>
+          <div class="fs-bar-right">
+            <span class="fs-shortcut-hint">Shortcuts: <strong>Space</strong> (Play/Pause) • <strong>Enter</strong> (Add Line)</span>
+            <button type="button" class="btn btn-outline btn-sm fs-exit-btn" id="fs-btn-exit" title="Exit Fullscreen Mode">✕ Exit Fullscreen (Esc)</button>
+          </div>
+        </div>
 
+        <!-- Tab 1: Line-by-Line Studio (Active by default for lyrics add & line-by-line edits) -->
+        <div class="tab-pane active" id="pane-line-editor">
           <!-- Interactive Line Builder & Timing Adjuster Box -->
           <div class="line-builder-panel" id="line-builder-panel">
             <div class="builder-panel-header">
@@ -458,7 +471,7 @@
                 <h4>Add Lyric Line &amp; Sync Time</h4>
               </div>
               <div class="builder-live-clock">
-                <span class="clock-label">Song Audio:</span>
+                <span class="clock-label">Current Song Audio:</span>
                 <span class="clock-val" id="builder-live-song-time">00:00.00</span>
               </div>
             </div>
@@ -474,7 +487,7 @@
 
             <div class="builder-text-row">
               <label for="builder-line-text" class="builder-field-label">Lyrics Line:</label>
-              <input type="text" id="builder-line-text" class="builder-input-line" placeholder="Enter lyrics text for this line..." autocomplete="off">
+              <input type="text" id="builder-line-text" class="builder-input-line" placeholder="Type lyrics line here... Press Enter or click '+ Add Line' to save!" autocomplete="off">
             </div>
 
             <div class="builder-times-grid">
@@ -529,25 +542,54 @@
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                <span>Add Line to Box</span>
+                <span>+ Add Line to Studio</span>
               </button>
             </div>
+          </div>
+
+          <!-- Line-by-Line Timing & Text Adjuster List (Always visible in Line-by-Line Studio) -->
+          <div class="line-manager-panel" id="line-manager-panel">
+            <div class="line-manager-header">
+              <div class="line-manager-header-left">
+                <h4>Line-by-Line Editor List</h4>
+                <span class="count-badge" id="parsed-count-badge">0 lines parsed</span>
+              </div>
+              <p>Directly edit lyrics text, change singer voice, fine-tune timings with +/- nudges, or sync directly to song position.</p>
+            </div>
+            <div class="line-manager-list" id="line-manager-list">
+              <!-- Dynamically populated from parsed lines -->
+            </div>
+            <div class="line-manager-bottom-bar">
+              <button type="button" class="btn btn-outline btn-sm" id="btn-scroll-add-line">
+                <span>+ Add Another Lyric Line</span>
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-format-check">
+                <span>✓ Re-parse &amp; Validate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Raw Text Editor with Direct Textarea -->
+        <div class="tab-pane" id="pane-editor">
+          <div class="quick-tags-bar">
+            <span class="hint-small">Quick Voice Tags:</span>
+            <button class="tag-insert-btn tag-1-btn" data-tag="[1]">+ [1] Male</button>
+            <button class="tag-insert-btn tag-2-btn" data-tag="[2]">+ [2] Female</button>
+            <button class="tag-insert-btn tag-3-btn" data-tag="[3]">+ [3] Both</button>
+            <span class="syntax-info" title="Supports [00:00 - 00:10] and 00:00,00:10">ℹ️ Syntax Help</span>
           </div>
 
           <!-- Lyrics Textarea Box with Floating/Corner + Add Line Button -->
           <div class="lyrics-box-wrapper">
             <div class="lyrics-box-toolbar">
-              <span class="lyrics-box-label">Lyrics with Timestamps</span>
-              <button type="button" class="btn-corner-add-line" id="btn-box-quick-add" title="Open Add Line helper">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span>Add Line</span>
+              <span class="lyrics-box-label">Raw Lyrics with Timestamps</span>
+              <button type="button" class="btn-corner-add-line" id="btn-box-quick-add" title="Switch to Line-by-Line Studio">
+                <span>⚡ Switch to Line-by-Line Studio</span>
               </button>
             </div>
 
-            <textarea id="lyrics-textarea" class="lyrics-input" rows="11" spellcheck="false" placeholder="Enter or paste your lyrics with timestamps here, e.g.:
+            <textarea id="lyrics-textarea" class="lyrics-input" rows="12" spellcheck="false" placeholder="Enter or paste your lyrics with timestamps here, e.g.:
 
 [1] [00:00.00 - 00:05.50] Male singing line
 [2] [00:06.00 - 00:12.00] Female singing line
@@ -555,32 +597,21 @@
 
 00:00:22.000,00:00:28.000
 [1] Comma format timestamps &amp; [00:15.30] LRC are also supported!
-Tip: You can also click '+ Add Line &amp; Timing' above or use 'Tap to Sync' tab!"></textarea>
+Tip: You can also use the 'Line-by-Line Studio' tab above for visual editing!"></textarea>
           </div>
 
           <div class="lyrics-footer">
             <div class="lyrics-footer-left">
-              <span id="parsed-count-badge" class="count-badge">0 lines parsed</span>
-              <button type="button" class="btn btn-outline btn-sm btn-toggle-lines-mgr" id="btn-toggle-line-manager">
-                <span>📋 Line-by-Line Adjuster (<span id="line-mgr-count">0</span>)</span>
+              <span id="raw-count-badge" class="count-badge">0 lines parsed</span>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-switch-to-lines">
+                <span>⚡ Open Line-by-Line Editor</span>
               </button>
             </div>
-            <button class="btn btn-outline btn-sm" id="btn-format-check">✓ Re-parse &amp; Validate</button>
-          </div>
-
-          <!-- Expandable Line-by-Line Timing Adjuster List -->
-          <div class="line-manager-panel" id="line-manager-panel" style="display: none;">
-            <div class="line-manager-header">
-              <h4>Line-by-Line Timing Adjuster</h4>
-              <p>Fine-tune start and end times for each line, preview audio, or update directly from current song position.</p>
-            </div>
-            <div class="line-manager-list" id="line-manager-list">
-              <!-- Dynamically populated from parsed lines -->
-            </div>
+            <button class="btn btn-outline btn-sm" id="btn-format-check-raw">✓ Re-parse &amp; Validate</button>
           </div>
         </div>
 
-        <!-- Tab 2: Interactive Tap-to-Sync -->
+        <!-- Tab 3: Interactive Tap-to-Sync -->
         <div class="tab-pane" id="pane-tap-sync">
           <div class="tap-sync-helper">
             <p>Don't have timestamps? Play the song and tap <strong>"Mark Line"</strong> or press
