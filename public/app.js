@@ -17,34 +17,19 @@ const state = {
   audioDuration: 0,
   audioElement: new Audio(),
   isPlaying: false,
-  currentTime: 14.8,
+  currentTime: 0,
   playbackRate: 1.0,
-
-  // Video Staging & Preview Configuration (Matched with screenshot)
-  staging: {
-    aspectRatio: '16:9',
-    theme: 'obsidian_gold',
-    quality: '720p',
-    fps: 30,
-    showWaveform: false,
-    showSingerBadges: false,
-    showIntroDots: true,
-    trackTitle: 'Electric Horizon (Duet Edition)',
-    trackArtist: 'Karaoke Studio Ensemble'
-  },
-  volume: 0.85,
-  isMuted: false,
 
   // Real-Time Vocal Remover DSP Configuration
   vocalCutEnabled: false,
   vocalCutIntensity: 100,
   bassPreserveEnabled: true,
 
-  // Typography & Colors (Obsidian & Gold default)
+  // Typography & Colors
   fontSize: 85,
-  color1: '#f59e0b',
-  color2: '#10b981',
-  color3: '#ffffff',
+  color1: '#00FFFF',
+  color2: '#FF00FF',
+  color3: '#FFFF00',
 
   // Lyrics & Anti-Overlap Segments
   lyricsRaw: '',
@@ -184,40 +169,7 @@ const dom = {
   canvasRecordAlert: $('canvas-record-alert'),
   btnDismissRecordAlert: $('btn-dismiss-record-alert'),
   antiRecordBadge: $('anti-record-badge'),
-
-  // Video Preview Player & Transport (Screenshot Matched)
-  btnCanvasBigPlay: $('btn-canvas-big-play'),
-  previewCurrentTime: $('preview-current-time'),
-  previewTimeScrubber: $('preview-time-scrubber'),
-  previewTotalDuration: $('preview-total-duration'),
-  btnPreviewPlayPause: $('btn-preview-play-pause'),
-  previewPlayIcon: $('preview-play-icon'),
-  previewPauseIcon: $('preview-pause-icon'),
-  btnPreviewRewind: $('btn-preview-rewind'),
-  btnPreviewForward: $('btn-preview-forward'),
-  btnPreviewMute: $('btn-preview-mute'),
-  previewVolIconOn: $('preview-vol-icon-on'),
-  previewVolIconOff: $('preview-vol-icon-off'),
-  previewVolumeSlider: $('preview-volume-slider'),
-  previewAspectBadge: $('preview-aspect-badge'),
-  btnPreviewFullscreen: $('btn-preview-fullscreen'),
-
-  // Video & Staging Settings Controls
-  btnAspect169: $('btn-aspect-16-9'),
-  btnAspect916: $('btn-aspect-9-16'),
-  btnAspect11: $('btn-aspect-1-1'),
-  btnThemeObsidian: $('btn-theme-obsidian'),
-  btnThemeCyber: $('btn-theme-cyber'),
-  btnThemeSlate: $('btn-theme-slate'),
-  btnQual720p: $('btn-qual-720p'),
-  btnQual1080p: $('btn-qual-1080p'),
-  btnFps30: $('btn-fps-30'),
-  btnFps60: $('btn-fps-60'),
-  chkShowWaveform: $('chk-show-waveform'),
-  chkShowSingerBadges: $('chk-show-singer-badges'),
-  chkShowIntroDots: $('chk-show-intro-dots'),
-  inputTrackTitle: $('input-track-title'),
-  inputTrackArtist: $('input-track-artist'),
+  btnPreviewKaraoke: $('btn-preview-karaoke'),
 
   // Export & Progress Elements
   btnRenderLive: $('btn-render-live'),
@@ -282,103 +234,6 @@ const TimeUtil = {
     return Math.max(0, Math.round((seconds || 0) * 100));
   }
 };
-
-function formatClockTime(sec) {
-  if (!sec || isNaN(sec) || sec < 0) return '00:00';
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-const RESOLUTIONS = {
-  '16:9': {
-    '1080p': { width: 1920, height: 1080 },
-    '720p': { width: 1280, height: 720 }
-  },
-  '9:16': {
-    '1080p': { width: 1080, height: 1920 },
-    '720p': { width: 720, height: 1280 }
-  },
-  '1:1': {
-    '1080p': { width: 1080, height: 1080 },
-    '720p': { width: 720, height: 720 }
-  }
-};
-
-const VIDEO_THEMES = {
-  obsidian_gold: {
-    id: 'obsidian_gold',
-    name: 'Obsidian & Gold',
-    bgColor: '#090b0e',
-    bgSecondary: '#141820',
-    singer1Color: '#f59e0b',
-    singer2Color: '#10b981',
-    bothColor: '#ffffff',
-    dimColor: '#525b6c',
-    visualizerColor: '#f59e0b',
-    particleColor: 'rgba(245, 158, 11, 0.15)'
-  },
-  cyber_emerald: {
-    id: 'cyber_emerald',
-    name: 'Cyber Emerald',
-    bgColor: '#070f0d',
-    bgSecondary: '#0f201b',
-    singer1Color: '#10b981',
-    singer2Color: '#06b6d4',
-    bothColor: '#ffffff',
-    dimColor: '#4b635c',
-    visualizerColor: '#10b981',
-    particleColor: 'rgba(16, 185, 129, 0.15)'
-  },
-  monochrome_slate: {
-    id: 'monochrome_slate',
-    name: 'Minimalist Slate',
-    bgColor: '#0b0d11',
-    bgSecondary: '#161a22',
-    singer1Color: '#e2e8f0',
-    singer2Color: '#94a3b8',
-    bothColor: '#ffffff',
-    dimColor: '#475569',
-    visualizerColor: '#94a3b8',
-    particleColor: 'rgba(255, 255, 255, 0.10)'
-  }
-};
-
-const DEMO_LYRICS_LINES = [
-  { startTime: 2.0, endTime: 5.5, singer: 'singer1', singerLabel: 'Singer 1', text: 'City lights are waking in the night' },
-  { startTime: 6.0, endTime: 9.5, singer: 'singer2', singerLabel: 'Singer 2', text: 'Footsteps echoing beneath the neon signs' },
-  { startTime: 10.0, endTime: 13.5, singer: 'both', singerLabel: 'Both', text: 'We run across the digital divide' },
-  {
-    startTime: 14.0,
-    endTime: 17.5,
-    singer: 'both',
-    singerLabel: 'Both',
-    text: 'Never look back again',
-    words: [
-      { text: 'Never ', startTime: 14.0, endTime: 14.5 },
-      { text: 'look ', startTime: 14.5, endTime: 15.2 },
-      { text: 'back ', startTime: 15.2, endTime: 15.8 },
-      { text: 'again', startTime: 15.8, endTime: 16.8 }
-    ]
-  },
-  {
-    startTime: 18.0,
-    endTime: 21.5,
-    singer: 'both',
-    singerLabel: 'Both',
-    text: 'Electric horizons guide the way',
-    words: [
-      { text: 'Electric ', startTime: 18.0, endTime: 18.7 },
-      { text: 'horizons ', startTime: 18.7, endTime: 19.4 },
-      { text: 'guide ', startTime: 19.4, endTime: 20.0 },
-      { text: 'the ', startTime: 20.0, endTime: 20.4 },
-      { text: 'way', startTime: 20.4, endTime: 21.2 }
-    ]
-  },
-  { startTime: 22.0, endTime: 25.5, singer: 'singer1', singerLabel: 'Singer 1', text: 'Through the shadows of yesterday' },
-  { startTime: 26.0, endTime: 29.0, singer: 'singer2', singerLabel: 'Singer 2', text: 'Until tomorrow turns to gold' },
-  { startTime: 29.5, endTime: 32.0, singer: 'both', singerLabel: 'Both', text: 'A melody that never grows old' }
-];
 
 const hexToAssColor = (hex) => {
   const clean = hex.replace('#', '').trim();
@@ -770,359 +625,244 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 }
 
 // ==========================================
-// 7. REAL-TIME CANVAS KARAOKE RENDER ENGINE (SCREENSHOT-MATCHED)
+// 7. REAL-TIME CANVAS KARAOKE RENDER ENGINE
 // ==========================================
-function getActiveLines() {
-  if (state.segments && state.segments.length > 0) {
-    return state.segments.map(seg => ({
-      startTime: seg.start,
-      endTime: seg.end,
-      text: seg.text,
-      singer: seg.colorMode === 1 ? 'singer1' : seg.colorMode === 2 ? 'singer2' : 'both',
-      singerLabel: seg.colorMode === 1 ? 'Singer 1' : seg.colorMode === 2 ? 'Singer 2' : 'Both',
-      words: (seg.words || []).map(w => ({
-        text: w.word || w.text || '',
-        startTime: w.start,
-        endTime: w.end
-      }))
-    }));
-  }
-  return DEMO_LYRICS_LINES;
-}
+function renderCanvasFrame(t, isCleanExport = false) {
+  // Clear canvas to black
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-function getSingerColor(singer, theme) {
-  if (singer === 'singer1') return state.color1 || theme.singer1Color;
-  if (singer === 'singer2') return state.color2 || theme.singer2Color;
-  return state.color3 || theme.bothColor;
-}
-
-function drawDeterministicParticles(ctx, width, height, t, particleColor) {
-  ctx.save();
-  ctx.fillStyle = particleColor || 'rgba(245, 158, 11, 0.15)';
-  const particleCount = 28;
-
-  for (let i = 0; i < particleCount; i++) {
-    const seed = i * 137.5;
-    const speed = 0.15 + (i % 5) * 0.05;
-    const x = ((Math.sin(seed) * 0.5 + 0.5) * width + Math.cos(t * speed + i) * 40) % width;
-    const y = ((Math.cos(seed) * 0.5 + 0.5) * height - (t * 20 * speed + i * 25)) % height;
-    const normY = y < 0 ? y + height : y;
-    const radius = 1.5 + (i % 3);
-
-    ctx.beginPath();
-    ctx.arc(x, normY, radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-function drawHeader(ctx, width, height, isVertical, theme) {
-  const title = (state.staging && state.staging.trackTitle) || 'Electric Horizon (Duet Edition)';
-  const artist = (state.staging && state.staging.trackArtist) || 'Karaoke Studio Ensemble';
-
-  ctx.save();
-  ctx.textAlign = 'center';
-
-  const headerY = isVertical ? height * 0.09 : height * 0.11;
-  const titleSize = isVertical ? Math.round(width * 0.052) : Math.round(height * 0.045);
-  const artistSize = Math.round(titleSize * 0.65);
-
-  // Track Title
-  ctx.font = `700 ${titleSize}px "Outfit", sans-serif`;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(title, width / 2, headerY);
-
-  // Artist
-  ctx.font = `500 ${artistSize}px "Outfit", sans-serif`;
-  ctx.fillStyle = theme.dimColor || '#525b6c';
-  ctx.fillText(artist, width / 2, headerY + artistSize * 1.5);
-
-  ctx.restore();
-}
-
-function drawVisualizer(ctx, width, height, t, isVertical, isSquare, theme) {
-  ctx.save();
-  const barCount = isVertical ? 32 : 56;
-  const vizWidth = isVertical ? width * 0.85 : width * 0.70;
-  const vizY = isVertical ? height * 0.82 : height * 0.84;
-  const barSpacing = vizWidth / barCount;
-  const barW = Math.max(2, barSpacing * 0.6);
-  const startX = (width - vizWidth) / 2;
-
-  for (let i = 0; i < barCount; i++) {
-    const harmonic1 = Math.sin(t * 4 + i * 0.3) * 0.5 + 0.5;
-    const harmonic2 = Math.cos(t * 8 - i * 0.2) * 0.3;
-    const amplitude = Math.max(0.08, Math.min(0.95, (harmonic1 + harmonic2) * 0.7));
-
-    const maxBarH = isVertical ? height * 0.08 : height * 0.10;
-    const barH = Math.max(4, amplitude * maxBarH);
-    const x = startX + i * barSpacing;
-    const y = vizY - barH / 2;
-
-    ctx.fillStyle = theme.visualizerColor || theme.singer1Color || '#f59e0b';
-    ctx.globalAlpha = 0.45 + amplitude * 0.55;
-
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(x, y, barW, barH, barW / 2);
-    } else {
-      ctx.rect(x, y, barW, barH);
-    }
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-function drawIntroCountIn(ctx, width, height, t, theme, firstLineStart) {
-  if (firstLineStart <= 1.0) return;
-  const leadTime = 3.0;
-  const introStart = Math.max(0, firstLineStart - leadTime);
-
-  if (t >= introStart && t < firstLineStart) {
+  if (state.segments.length === 0) {
     ctx.save();
-    const countProgress = (t - introStart) / leadTime;
-    const activeDot = Math.floor(countProgress * 4);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '600 44px "Outfit", sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fillText('1080p Duet Karaoke Canvas Ready', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 25);
+    ctx.font = '400 28px "Outfit", sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.fillText('Upload an audio file or paste a YouTube song to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 35);
+    ctx.restore();
+    if (dom.slotIndicator) dom.slotIndicator.textContent = 'Active slots: None';
+    if (!isCleanExport && !state.isCleanExporting) {
+      drawAntiRecordingShield(t);
+    }
+    return;
+  }
 
-    const dotY = height * 0.32;
-    const dotSpacing = 36;
-    const totalWidth = 3 * dotSpacing;
-    const startX = (width - totalWidth) / 2;
+  // Filter and slot active segments
+  const activeSegments = state.segments.filter(seg => t >= seg.appear && t <= seg.disappear);
+  const slotActive = [null, null, null];
+  for (const seg of activeSegments) {
+    slotActive[seg.slot] = seg;
+  }
 
-    for (let d = 0; d < 4; d++) {
-      const dx = startX + d * dotSpacing;
-      const isActive = d <= activeDot;
+  // Render each active slot line
+  for (let slot = 0; slot < 3; slot++) {
+    const seg = slotActive[slot];
+    if (!seg) continue;
+
+    const singerColor = seg.colorMode === 1 ? state.color1 :
+                        seg.colorMode === 2 ? state.color2 : state.color3;
+
+    renderKaraokeLine(seg, t, seg.yPos, singerColor);
+  }
+
+  // Update slot monitor text
+  if (dom.slotIndicator) {
+    dom.slotIndicator.textContent = slotActive
+      .map((s, idx) => `Slot ${idx}: ${s ? 'Active' : 'Idle'}`)
+      .join(' | ');
+  }
+
+  // Draw Anti-Screen-Recording Security Layer across preview canvas
+  if (!isCleanExport && !state.isCleanExporting) {
+    drawAntiRecordingShield(t);
+  }
+}
+
+/**
+ * 7.1 DYNAMIC ANTI-SCREEN-RECORDING SECURITY SHIELD
+ * Renders an animated semi-transparent frosted security strip across the active
+ * lyrics zone, optical encoder micro-scanlines, and dynamic session watermarks.
+ * Renders unauthorized screen recordings completely useless for publication,
+ * while allowing the creator in-browser to clearly view and synchronize lyrics.
+ */
+function drawAntiRecordingShield(t) {
+  if (!state.antiRecordShield || !state.antiRecordShield.enabled) return;
+
+  ctx.save();
+
+  // 1. Optical Micro-Scanlines (Causes temporal compression distortion & moiré in video encoders)
+  if (state.antiRecordShield.showScanlines) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+    for (let y = 0; y < CANVAS_HEIGHT; y += 4) {
+      ctx.fillRect(0, y, CANVAS_WIDTH, 1);
+    }
+  }
+
+  // 2. Translucent Frosted Security Strip across Center Lyrics Zone
+  if (state.antiRecordShield.showStrip) {
+    const stripHeight = 110;
+    const stripY = 485; // Centered at Y=540 across active lyric area
+
+    // A. Frosted semi-transparent dark backdrop
+    const stripGradient = ctx.createLinearGradient(0, stripY, 0, stripY + stripHeight);
+    stripGradient.addColorStop(0, 'rgba(15, 23, 42, 0.52)');
+    stripGradient.addColorStop(0.5, 'rgba(10, 15, 30, 0.62)');
+    stripGradient.addColorStop(1, 'rgba(15, 23, 42, 0.52)');
+    ctx.fillStyle = stripGradient;
+    ctx.fillRect(0, stripY, CANVAS_WIDTH, stripHeight);
+
+    // B. Glowing perimeter border lines
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
+    ctx.beginPath();
+    ctx.moveTo(0, stripY);
+    ctx.lineTo(CANVAS_WIDTH, stripY);
+    ctx.moveTo(0, stripY + stripHeight);
+    ctx.lineTo(CANVAS_WIDTH, stripY + stripHeight);
+    ctx.stroke();
+
+    // C. Angled semi-transparent hazard/security hash lines
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, stripY, CANVAS_WIDTH, stripHeight);
+    ctx.clip();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 10;
+    const spacing = 48;
+    for (let x = -stripHeight; x < CANVAS_WIDTH + stripHeight; x += spacing) {
       ctx.beginPath();
-      ctx.arc(dx, dotY, isActive ? 8 : 5, 0, Math.PI * 2);
-      ctx.fillStyle = isActive ? theme.singer1Color : (theme.dimColor || '#525b6c');
-      ctx.globalAlpha = isActive ? 1.0 : 0.35;
-      ctx.fill();
+      ctx.moveTo(x, stripY);
+      ctx.lineTo(x + stripHeight, stripY + stripHeight);
+      ctx.stroke();
     }
 
-    ctx.font = `600 ${Math.round(height * 0.022)}px "Outfit", sans-serif`;
-    ctx.fillStyle = theme.dimColor || '#525b6c';
-    ctx.textAlign = 'center';
-    ctx.fillText('GET READY', width / 2, dotY - 22);
+    // D. Animated dynamic light sweep (prevents AI static watermark inpainting)
+    const sweepProgress = ((t * 260) % (CANVAS_WIDTH + 600)) - 300;
+    const lightSweep = ctx.createLinearGradient(sweepProgress - 160, 0, sweepProgress + 160, 0);
+    lightSweep.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    lightSweep.addColorStop(0.5, 'rgba(255, 255, 255, 0.10)');
+    lightSweep.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = lightSweep;
+    ctx.fillRect(0, stripY, CANVAS_WIDTH, stripHeight);
 
     ctx.restore();
-  }
-}
 
-function drawSingerBadge(ctx, width, y, label, color, isActive) {
+    // E. High-visibility semi-transparent security typography
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Primary Warning Text (White with shadow)
+    ctx.font = '700 28px "Outfit", "Noto Sans", Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 6;
+    ctx.fillText('🛡️ PREVIEW ONLY • SCREEN RECORDING PROHIBITED • EXPORT TO REMOVE WATERMARK', CANVAS_WIDTH / 2, stripY + 38);
+
+    // Subtitle & Dynamic Session Stamp
+    const userEmail = (window.KaraokeAuth && window.KaraokeAuth.getCurrentUser && window.KaraokeAuth.getCurrentUser()?.email) || 'GUEST-SESSION';
+    ctx.font = '500 18px "JetBrains Mono", monospace, sans-serif';
+    ctx.fillStyle = 'rgba(224, 231, 255, 0.58)';
+    ctx.fillText(`DUET KARAOKE MAKER • ANTI-PIRACY SHIELD • USER: ${userEmail} • TIME: ${TimeUtil.toDisplay(t)}`, CANVAS_WIDTH / 2, stripY + 75);
+  }
+
+  // 3. Subtle Diagonal Background Watermark
   ctx.save();
-  ctx.font = '600 13px "Outfit", sans-serif';
-  const metrics = ctx.measureText(label.toUpperCase());
-  const badgeW = metrics.width + 20;
-  const badgeH = 20;
-  const badgeX = (width - badgeW) / 2;
-
-  ctx.fillStyle = isActive ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.3)';
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.2;
-
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(badgeX, y - badgeH / 2, badgeW, badgeH, 10);
-  } else {
-    ctx.rect(badgeX, y - badgeH / 2, badgeW, badgeH);
-  }
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = color;
+  ctx.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  ctx.rotate(-14 * Math.PI / 180);
+  ctx.font = '800 48px "Outfit", sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label.toUpperCase(), width / 2, y);
+  ctx.fillText('PROTECTED PREVIEW • DO NOT RECORD • EXPORT FOR 1080P CLEAN VIDEO', 0, -180);
+  ctx.fillText('PROTECTED PREVIEW • DO NOT RECORD • EXPORT FOR 1080P CLEAN VIDEO', 0, 180);
+  ctx.restore();
+
+  // 4. Subtle Corner Stamp
+  ctx.font = '600 20px "Outfit", sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.textAlign = 'right';
+  ctx.fillText('🔒 LIVE CANVAS PREVIEW — NOT FOR RECORDING', CANVAS_WIDTH - 30, CANVAS_HEIGHT - 25);
 
   ctx.restore();
 }
 
-function drawActiveLineWithWipe(ctx, width, lineY, line, t, activeColor, fontSize) {
-  const text = line.text;
-  const textMetrics = ctx.measureText(text);
-  const textWidth = textMetrics.width;
-  const startX = (width - textWidth) / 2;
+function renderKaraokeLine(seg, t, yPos, singerColor) {
+  const words = seg.words || [];
+  if (words.length === 0) return;
 
-  let progress = 0;
-  const lineDuration = Math.max(0.1, line.endTime - line.startTime);
+  const fontSize = parseInt(state.fontSize, 10);
+  ctx.font = `bold ${fontSize}px "Outfit", "Noto Sans", Arial, sans-serif`;
+  ctx.textBaseline = 'middle';
 
-  if (line.words && line.words.length > 0) {
-    let accumulatedWidth = 0;
-    let activeWordFound = false;
+  const spaceWidth = ctx.measureText(' ').width;
+  const wordMetrics = words.map(w => ({
+    text: w.word,
+    width: ctx.measureText(w.word).width,
+    start: w.start,
+    end: w.end
+  }));
 
-    for (let w = 0; w < line.words.length; w++) {
-      const word = line.words[w];
-      const wordWidth = ctx.measureText(word.text).width;
+  const totalLineWidth = wordMetrics.reduce((acc, m) => acc + m.width, 0) + (wordMetrics.length - 1) * spaceWidth;
+  let currentX = (CANVAS_WIDTH - totalLineWidth) / 2;
 
-      if (t >= word.endTime) {
-        accumulatedWidth += wordWidth;
-      } else if (t >= word.startTime && t < word.endTime) {
-        const wordDur = Math.max(0.05, word.endTime - word.startTime);
-        const wordProg = (t - word.startTime) / wordDur;
-        accumulatedWidth += wordWidth * wordProg;
-        activeWordFound = true;
-        break;
-      } else {
-        break;
-      }
-    }
+  // Render words with outline stroke and karaoke sweep
+  for (const wm of wordMetrics) {
+    drawWord(wm, currentX, yPos, fontSize, singerColor, t);
+    currentX += wm.width + spaceWidth;
+  }
+}
 
-    if (!activeWordFound && t >= line.endTime) {
-      progress = 1.0;
-    } else {
-      progress = Math.min(1.0, Math.max(0, accumulatedWidth / textWidth));
-    }
+function drawWord(wm, x, y, fontSize, singerColor, t) {
+  // 1. Text shadow & outline stroke
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 3;
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = Math.max(4, fontSize * 0.08);
+  ctx.lineJoin = 'round';
+  ctx.strokeText(wm.text, x, y);
+  ctx.restore();
+
+  // 2. Karaoke fill: White -> Progressive Gradient Sweep -> Singer Color
+  if (t < wm.start) {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(wm.text, x, y);
+  } else if (t >= wm.end) {
+    ctx.fillStyle = singerColor;
+    ctx.fillText(wm.text, x, y);
   } else {
-    progress = Math.min(1.0, Math.max(0, (t - line.startTime) / lineDuration));
-  }
+    const ratio = Math.max(0, Math.min(1, (t - wm.start) / Math.max(0.001, wm.end - wm.start)));
+    const gradient = ctx.createLinearGradient(x, 0, x + wm.width, 0);
+    gradient.addColorStop(0, singerColor);
+    gradient.addColorStop(ratio, singerColor);
+    gradient.addColorStop(Math.min(1, ratio + 0.001), '#FFFFFF');
+    gradient.addColorStop(1, '#FFFFFF');
 
-  const wipeX = startX + textWidth * progress;
-
-  // 1. Un-highlighted text in off-white / slate
-  ctx.save();
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText(text, width / 2, lineY);
-  ctx.restore();
-
-  // 2. Highlighted text clipped up to wipeX
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(startX - 15, lineY - fontSize * 1.2, (wipeX - startX) + 15, fontSize * 1.8);
-  ctx.clip();
-
-  ctx.fillStyle = activeColor;
-  ctx.shadowColor = activeColor;
-  ctx.shadowBlur = 14;
-  ctx.fillText(text, width / 2, lineY);
-
-  ctx.restore();
-}
-
-function drawScrollingLyrics(ctx, width, height, t, isVertical, isSquare, theme) {
-  const lines = getActiveLines();
-  if (lines.length === 0) return;
-
-  // Find active line index
-  let activeIndex = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (t >= lines[i].startTime && t <= lines[i].endTime) {
-      activeIndex = i;
-      break;
-    }
-  }
-
-  if (activeIndex === -1) {
-    for (let i = 0; i < lines.length; i++) {
-      if (t < lines[i].startTime) {
-        activeIndex = Math.max(0, i - 0.5);
-        break;
-      }
-    }
-    if (activeIndex === -1) activeIndex = lines.length - 1;
-  }
-
-  const focalY = isVertical ? height * 0.46 : height * 0.48;
-  const baseFontSize = isVertical ? Math.round(width * 0.062) : Math.round(height * 0.058);
-  const lineSpacing = baseFontSize * 1.85;
-
-  const range = 2; // -2 to +2 lines visible
-  const centerFloor = Math.floor(activeIndex);
-
-  for (let offset = -range; offset <= range; offset++) {
-    const lineIdx = centerFloor + offset;
-    if (lineIdx < 0 || lineIdx >= lines.length) continue;
-
-    const line = lines[lineIdx];
-    const isCurrentActive = Math.abs(lineIdx - activeIndex) < 0.5 && t >= line.startTime && t <= line.endTime;
-
-    const distFromCenter = lineIdx - activeIndex;
-    const lineY = focalY + distFromCenter * lineSpacing;
-
-    const scale = isCurrentActive ? 1.05 : Math.max(0.72, 1.0 - Math.abs(distFromCenter) * 0.16);
-    const opacity = isCurrentActive ? 1.0 : Math.max(0.20, 0.65 - Math.abs(distFromCenter) * 0.22);
-
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.textAlign = 'center';
-
-    const currentFontSize = Math.round(baseFontSize * scale);
-    ctx.font = `700 ${currentFontSize}px "Outfit", sans-serif`;
-
-    const singerColor = getSingerColor(line.singer, theme);
-
-    if (state.staging?.showSingerBadges && (isCurrentActive || Math.abs(distFromCenter) <= 1)) {
-      drawSingerBadge(ctx, width, lineY - currentFontSize * 0.85, line.singerLabel || 'DUET', singerColor, isCurrentActive);
-    }
-
-    if (isCurrentActive) {
-      drawActiveLineWithWipe(ctx, width, lineY, line, t, singerColor, currentFontSize);
-    } else {
-      ctx.fillStyle = theme.dimColor || '#525b6c';
-      ctx.fillText(line.text, width / 2, lineY);
-    }
-
-    ctx.restore();
+    ctx.fillStyle = gradient;
+    ctx.fillText(wm.text, x, y);
   }
 }
 
-function drawFooter(ctx, width, height, theme) {
-  ctx.save();
-  ctx.font = '500 11px "Outfit", sans-serif';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.textAlign = 'center';
-  ctx.fillText('100% Client-Side Sandbox • Karaoke Studio Engine', width / 2, height - 16);
-  ctx.restore();
+function animationLoop() {
+  if (state.isPlaying && state.audioElement) {
+    state.currentTime = state.audioElement.currentTime;
+    dom.timeScrubber.value = state.currentTime;
+    updateTimeDisplay();
+  }
+  renderCanvasFrame(state.currentTime);
+  requestAnimationFrame(animationLoop);
 }
 
-function renderCanvasFrame(t, isCleanExport = false) {
-  const width = dom.canvas.width;
-  const height = dom.canvas.height;
-  const theme = VIDEO_THEMES[state.staging?.theme] || VIDEO_THEMES.obsidian_gold;
-  const isVertical = state.staging?.aspectRatio === '9:16';
-  const isSquare = state.staging?.aspectRatio === '1:1';
-
-  // 1. Clear & Background
-  ctx.fillStyle = theme.bgColor;
-  ctx.fillRect(0, 0, width, height);
-
-  // Subtle radial gradient background for depth
-  const bgGrad = ctx.createRadialGradient(
-    width / 2, height * 0.45, 50,
-    width / 2, height * 0.45, width * 0.85
-  );
-  bgGrad.addColorStop(0, theme.bgSecondary);
-  bgGrad.addColorStop(1, theme.bgColor);
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, width, height);
-
-  // Subtle ambient background floating particles
-  drawDeterministicParticles(ctx, width, height, t, theme.particleColor);
-
-  // 2. Header: Title & Artist
-  drawHeader(ctx, width, height, isVertical, theme);
-
-  // 3. Audio Visualizer / Waveform (if enabled)
-  if (state.staging?.showWaveform) {
-    drawVisualizer(ctx, width, height, t, isVertical, isSquare, theme);
-  }
-
-  // 4. Intro Count-in Dots (if enabled)
-  if (state.staging?.showIntroDots) {
-    const lines = getActiveLines();
-    const firstStart = lines[0]?.startTime ?? 2.0;
-    drawIntroCountIn(ctx, width, height, t, theme, firstStart);
-  }
-
-  // 5. Kinetic Scrolling Karaoke Lyrics
-  drawScrollingLyrics(ctx, width, height, t, isVertical, isSquare, theme);
-
-  // 6. Subtle Watermark / Footer
-  drawFooter(ctx, width, height, theme);
-
-  // Update slot indicator if present
-  if (dom.slotIndicator) {
-    dom.slotIndicator.textContent = state.segments.length > 0
-      ? `${state.segments.length} lines active`
-      : 'Demo Mode: Electric Horizon (Duet Edition)';
+function updateTimeDisplay() {
+  dom.timeDisplay.textContent = `${TimeUtil.toDisplay(state.currentTime)} / ${TimeUtil.toDisplay(state.audioDuration)}`;
+  if (dom.builderLiveSongTime) {
+    dom.builderLiveSongTime.textContent = TimeUtil.toDisplay(state.currentTime);
   }
 }
 
@@ -2516,59 +2256,6 @@ function bindColorSync(pickerEl, hexEl, stateProp) {
   });
 }
 
-function applyStagingDimensions() {
-  const aspect = state.staging.aspectRatio || '16:9';
-  const quality = state.staging.quality || '720p';
-  const res = (RESOLUTIONS[aspect] && RESOLUTIONS[aspect][quality]) || { width: 1280, height: 720 };
-
-  dom.canvas.width = res.width;
-  dom.canvas.height = res.height;
-
-  dom.canvas.classList.remove('aspect-16-9', 'aspect-9-16', 'aspect-1-1');
-  if (aspect === '9:16') {
-    dom.canvas.classList.add('aspect-9-16');
-  } else if (aspect === '1:1') {
-    dom.canvas.classList.add('aspect-1-1');
-  } else {
-    dom.canvas.classList.add('aspect-16-9');
-  }
-
-  if (dom.previewAspectBadge) {
-    dom.previewAspectBadge.textContent = `${aspect} • ${quality}`;
-  }
-  renderCanvasFrame(state.currentTime);
-}
-
-function applyStagingTheme(themeId) {
-  state.staging.theme = themeId;
-  const th = VIDEO_THEMES[themeId] || VIDEO_THEMES.obsidian_gold;
-
-  state.color1 = th.singer1Color;
-  state.color2 = th.singer2Color;
-  state.color3 = th.bothColor;
-
-  if (dom.color1) dom.color1.value = th.singer1Color;
-  if (dom.color1Hex) dom.color1Hex.value = th.singer1Color;
-  if (dom.color2) dom.color2.value = th.singer2Color;
-  if (dom.color2Hex) dom.color2Hex.value = th.singer2Color;
-  if (dom.color3) dom.color3.value = th.bothColor;
-  if (dom.color3Hex) dom.color3Hex.value = th.bothColor;
-
-  renderCanvasFrame(state.currentTime);
-}
-
-function updateVolumeIcons() {
-  if (dom.previewVolIconOn && dom.previewVolIconOff) {
-    if (state.isMuted || state.volume === 0) {
-      dom.previewVolIconOn.style.display = 'none';
-      dom.previewVolIconOff.style.display = 'block';
-    } else {
-      dom.previewVolIconOn.style.display = 'block';
-      dom.previewVolIconOff.style.display = 'none';
-    }
-  }
-}
-
 function initEventListeners() {
   // Audio upload & Drag-and-Drop
   dom.audioDropzone.addEventListener('click', () => dom.audioFileInput.click());
@@ -2656,40 +2343,16 @@ function initEventListeners() {
     seekToTime(parseFloat(e.target.value));
   });
 
-  // Video Preview Player Transport Listeners (Screenshot Matched)
-  dom.btnCanvasBigPlay?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    togglePlay();
-  });
-  dom.btnPreviewPlayPause?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    togglePlay();
-  });
-  dom.btnPreviewRewind?.addEventListener('click', () => {
-    seekToTime(Math.max(0, state.currentTime - 5));
-  });
-  dom.btnPreviewForward?.addEventListener('click', () => {
-    const maxDur = state.audioDuration || 32;
-    seekToTime(Math.min(maxDur, state.currentTime + 5));
-  });
-  dom.previewTimeScrubber?.addEventListener('input', (e) => {
-    seekToTime(parseFloat(e.target.value));
-  });
-  dom.previewVolumeSlider?.addEventListener('input', (e) => {
-    const val = parseFloat(e.target.value);
-    state.volume = val;
-    if (state.audioElement) state.audioElement.volume = val;
-    state.isMuted = val === 0;
-    updateVolumeIcons();
-  });
-  dom.btnPreviewMute?.addEventListener('click', () => {
-    state.isMuted = !state.isMuted;
-    if (state.audioElement) {
-      state.audioElement.muted = state.isMuted;
+  // Full-Width Preview Action Row Button
+  dom.btnPreviewKaraoke?.addEventListener('click', () => {
+    dom.stageWrapper?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!state.isPlaying && (state.audioDuration > 0 || state.audioElement.src)) {
+      togglePlay();
     }
-    updateVolumeIcons();
   });
-  dom.btnPreviewFullscreen?.addEventListener('click', () => {
+
+  // Stage & Fullscreen Controls
+  dom.btnFullscreen?.addEventListener('click', () => {
     const elem = dom.stageWrapper || dom.canvas;
     if (!document.fullscreenElement) {
       elem.requestFullscreen?.().catch(() => {});
@@ -2698,81 +2361,12 @@ function initEventListeners() {
     }
   });
 
-  // Full-row Preview Button: Scroll to Preview Player & Trigger
-  dom.btnPreviewKaraoke?.addEventListener('click', () => {
-    dom.stageWrapper?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    renderCanvasFrame(state.currentTime);
+  dom.chkShowGuides?.addEventListener('change', e => {
+    if (dom.canvasGuide) dom.canvasGuide.style.display = e.target.checked ? 'block' : 'none';
   });
 
-  // Staging Settings: Aspect Ratio
-  const aspectBtns = [dom.btnAspect169, dom.btnAspect916, dom.btnAspect11];
-  aspectBtns.forEach(btn => {
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      aspectBtns.forEach(b => b?.classList.remove('active'));
-      btn.classList.add('active');
-      state.staging.aspectRatio = btn.getAttribute('data-aspect') || '16:9';
-      applyStagingDimensions();
-    });
-  });
-
-  // Staging Settings: Theme & Singer Palette
-  const themeBtns = [dom.btnThemeObsidian, dom.btnThemeCyber, dom.btnThemeSlate];
-  themeBtns.forEach(btn => {
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      themeBtns.forEach(b => b?.classList.remove('active'));
-      btn.classList.add('active');
-      const themeId = btn.getAttribute('data-theme') || 'obsidian_gold';
-      applyStagingTheme(themeId);
-    });
-  });
-
-  // Staging Settings: Resolution
-  const qualBtns = [dom.btnQual720p, dom.btnQual1080p];
-  qualBtns.forEach(btn => {
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      qualBtns.forEach(b => b?.classList.remove('active'));
-      btn.classList.add('active');
-      state.staging.quality = btn.getAttribute('data-quality') || '720p';
-      applyStagingDimensions();
-    });
-  });
-
-  // Staging Settings: Frame Rate
-  const fpsBtns = [dom.btnFps30, dom.btnFps60];
-  fpsBtns.forEach(btn => {
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      fpsBtns.forEach(b => b?.classList.remove('active'));
-      btn.classList.add('active');
-      state.staging.fps = parseInt(btn.getAttribute('data-fps') || '30', 10);
-    });
-  });
-
-  // Staging Settings: Layer Overlays
-  dom.chkShowWaveform?.addEventListener('change', (e) => {
-    state.staging.showWaveform = e.target.checked;
-    renderCanvasFrame(state.currentTime);
-  });
-  dom.chkShowSingerBadges?.addEventListener('change', (e) => {
-    state.staging.showSingerBadges = e.target.checked;
-    renderCanvasFrame(state.currentTime);
-  });
-  dom.chkShowIntroDots?.addEventListener('change', (e) => {
-    state.staging.showIntroDots = e.target.checked;
-    renderCanvasFrame(state.currentTime);
-  });
-
-  // Staging Settings: Custom Track Title & Artist
-  dom.inputTrackTitle?.addEventListener('input', (e) => {
-    state.staging.trackTitle = e.target.value.trim() || 'Electric Horizon (Duet Edition)';
-    renderCanvasFrame(state.currentTime);
-  });
-  dom.inputTrackArtist?.addEventListener('input', (e) => {
-    state.staging.trackArtist = e.target.value.trim() || 'Karaoke Studio Ensemble';
-    renderCanvasFrame(state.currentTime);
+  dom.btnDismissRecordAlert?.addEventListener('click', () => {
+    dismissScreenCaptureDetection();
   });
 
   // Keyboard navigation shortcuts (Space = play/pause, Left/Right = seek 5s)
@@ -3053,9 +2647,6 @@ window.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
   checkServerStatus();
   initAntiRecordingProtection();
-  applyStagingDimensions();
-  applyStagingTheme('obsidian_gold');
-  updateTimeDisplay();
-  renderCanvasFrame(state.currentTime);
+  renderCanvasFrame(0);
   animationLoop();
 });

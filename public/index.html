@@ -611,223 +611,56 @@ Tip: You can also click '+ Add Line &amp; Timing' above or use 'Tap to Sync' tab
         </button>
       </div>
 
-      <!-- 3rd Image: Real-Time Live Canvas Preview & Video Staging Studio -->
-      <section class="panel preview-panel preview-studio-panel" id="preview-panel">
-        <div class="preview-studio-grid">
+      <!-- 3rd Image: Real-Time Live Canvas Preview -->
+      <section class="panel preview-panel" id="preview-panel">
 
-          <!-- Left Column: Video Preview Player -->
-          <div class="preview-player-col" id="preview-player-container">
-            <!-- Screen Canvas Area -->
-            <div class="canvas-screen-area" id="stage-wrapper">
-              <canvas id="karaoke-canvas" width="1280" height="720" class="aspect-16-9"></canvas>
+        <div class="preview-header">
+          <div class="preview-title-box">
+            <h2>Real-Time Live Canvas Preview</h2>
+            <span class="preview-sub">Exact 1920x1080 5-Section Layout (Anti-Overlap Display)</span>
+          </div>
+          <div class="preview-tools">
+            <button class="btn-icon" id="btn-fullscreen" title="Fullscreen Preview">⛶</button>
+          </div>
+        </div>
 
-              <!-- Big Center Overlay Play Button when paused -->
-              <button type="button" class="btn-canvas-big-play" id="btn-canvas-big-play" aria-label="Play video preview">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-              </button>
-
-              <div class="canvas-overlay-guide" id="canvas-guide" style="display: none;">
-                <div class="guide-line" style="top: 20%;"><span>y=20%</span></div>
-                <div class="guide-line" style="top: 40%;"><span>y=40%</span></div>
-                <div class="guide-line" style="top: 60%;"><span>y=60%</span></div>
-                <div class="guide-line" style="top: 80%;"><span>y=80%</span></div>
-              </div>
-
-              <!-- Anti-Screen-Recording Interception Alert Overlay -->
-              <div class="canvas-record-alert" id="canvas-record-alert" style="display: none;">
-                <div class="record-alert-content">
-                  <div class="record-alert-icon">⚠️</div>
-                  <h4>Screen Capture Detected</h4>
-                  <p>Real-time canvas preview is suspended while screen recording software or tab capture is active to protect creator content.</p>
-                  <div class="record-alert-note">💡 Use the <strong>Download Duet Karaoke Video</strong> button below to generate a clean, unwatermarked video file.</div>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btn-dismiss-record-alert">Resume Preview</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Transport Controls Bar -->
-            <div class="preview-transport-bar">
-              <!-- Seek Bar Row -->
-              <div class="transport-seek-row">
-                <span class="transport-time font-mono" id="preview-current-time">00:00</span>
-                <div class="transport-scrubber-wrap">
-                  <input type="range" id="preview-time-scrubber" min="0" max="100" value="0" step="0.05" class="transport-scrubber" aria-label="Seek playback position">
-                </div>
-                <span class="transport-time font-mono text-muted" id="preview-total-duration">00:00</span>
-              </div>
-
-              <!-- Buttons Row -->
-              <div class="transport-actions-row">
-                <!-- Left: Playback Controls -->
-                <div class="transport-btn-group">
-                  <button type="button" class="transport-btn-primary" id="btn-preview-play-pause" title="Play/Pause (Spacebar)" aria-label="Play">
-                    <svg id="preview-play-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                    <svg id="preview-pause-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display: none;">
-                      <rect x="6" y="4" width="4" height="16"></rect>
-                      <rect x="14" y="4" width="4" height="16"></rect>
-                    </svg>
-                  </button>
-
-                  <button type="button" class="transport-btn-secondary" id="btn-preview-rewind" title="Rewind 5s" aria-label="Rewind 5s">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path>
-                    </svg>
-                  </button>
-
-                  <button type="button" class="transport-btn-secondary" id="btn-preview-forward" title="Forward 5s" aria-label="Forward 5s">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M6 17l5-5-5-5M13 17l5-5-5-5"></path>
-                    </svg>
-                  </button>
-                </div>
-
-                <!-- Middle: Volume Controls -->
-                <div class="transport-volume-group">
-                  <button type="button" class="transport-btn-ghost" id="btn-preview-mute" title="Mute/Unmute" aria-label="Mute">
-                    <svg id="preview-vol-icon-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                    </svg>
-                    <svg id="preview-vol-icon-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                      <path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"></path>
-                    </svg>
-                  </button>
-                  <input type="range" id="preview-volume-slider" min="0" max="1" step="0.05" value="0.85" class="transport-volume-slider" aria-label="Volume Slider">
-                </div>
-
-                <!-- Right: Aspect & Fullscreen -->
-                <div class="transport-misc-group">
-                  <span class="transport-pill-badge" id="preview-aspect-badge">16:9 • 720p</span>
-                  <button type="button" class="transport-btn-secondary" id="btn-preview-fullscreen" title="Toggle Fullscreen" aria-label="Fullscreen">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+        <!-- 16:9 Canvas Stage Wrapper -->
+        <div class="canvas-stage-wrapper" id="stage-wrapper">
+          <canvas id="karaoke-canvas" width="1920" height="1080"></canvas>
+          <div class="canvas-overlay-guide" id="canvas-guide" style="display: none;">
+            <div class="guide-line" style="top: 20%;"><span>y=216</span></div>
+            <div class="guide-line" style="top: 40%;"><span>y=432</span></div>
+            <div class="guide-line" style="top: 60%;"><span>y=648</span></div>
+            <div class="guide-line" style="top: 80%;"><span>y=864</span></div>
+            <div class="guide-slot" style="top: 30%;"><span>Slot 0 (y=324)</span></div>
+            <div class="guide-slot" style="top: 50%;"><span>Slot 1 (y=540)</span></div>
+            <div class="guide-slot" style="top: 70%;"><span>Slot 2 (y=756)</span></div>
+          </div>
+          <!-- Anti-Screen-Recording Interception Alert Overlay -->
+          <div class="canvas-record-alert" id="canvas-record-alert" style="display: none;">
+            <div class="record-alert-content">
+              <div class="record-alert-icon">⚠️</div>
+              <h4>Screen Capture Detected</h4>
+              <p>Real-time canvas preview is suspended while screen recording software or tab capture is active to protect creator content.</p>
+              <div class="record-alert-note">💡 Use the <strong>Download Duet Karaoke Video (.MP4)</strong> button below to generate a clean, unwatermarked 1080p video file.</div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-dismiss-record-alert">Resume Preview</button>
             </div>
           </div>
+        </div>
 
-          <!-- Right Column: Video & Staging Settings -->
-          <div class="staging-settings-col">
-            <div class="staging-card">
-              <div class="staging-header">
-                <h3>VIDEO &amp; STAGING SETTINGS</h3>
-                <p>Configure video dimensions, color theme, and display layers</p>
-              </div>
-
-              <!-- 1. Aspect Ratio -->
-              <div class="staging-section">
-                <label class="staging-label">ASPECT RATIO</label>
-                <div class="aspect-ratio-grid">
-                  <button type="button" class="aspect-btn active" data-aspect="16:9" id="btn-aspect-16-9">
-                    <span class="aspect-title">16:9 Landscape</span>
-                    <span class="aspect-desc">YouTube / Desktop</span>
-                  </button>
-                  <button type="button" class="aspect-btn" data-aspect="9:16" id="btn-aspect-9-16">
-                    <span class="aspect-title">9:16 Vertical</span>
-                    <span class="aspect-desc">Reels / TikTok / Shorts</span>
-                  </button>
-                  <button type="button" class="aspect-btn" data-aspect="1:1" id="btn-aspect-1-1">
-                    <span class="aspect-title">1:1 Square</span>
-                    <span class="aspect-desc">Square Social Feed</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- 2. Theme & Singer Color Palette -->
-              <div class="staging-section">
-                <label class="staging-label">THEME &amp; SINGER COLOR PALETTE</label>
-                <div class="theme-palette-grid">
-                  <button type="button" class="theme-btn active" data-theme="obsidian_gold" id="btn-theme-obsidian">
-                    <span class="theme-name">Obsidian &amp; Gold</span>
-                    <div class="theme-dots">
-                      <span class="theme-dot" style="background-color: #f59e0b;" title="Singer 1 (Amber)"></span>
-                      <span class="theme-dot" style="background-color: #10b981;" title="Singer 2 (Emerald)"></span>
-                      <span class="theme-dot" style="background-color: #ffffff;" title="Duet (White)"></span>
-                    </div>
-                  </button>
-
-                  <button type="button" class="theme-btn" data-theme="cyber_emerald" id="btn-theme-cyber">
-                    <span class="theme-name">Cyber Emerald</span>
-                    <div class="theme-dots">
-                      <span class="theme-dot" style="background-color: #10b981;" title="Singer 1 (Emerald)"></span>
-                      <span class="theme-dot" style="background-color: #06b6d4;" title="Singer 2 (Cyan)"></span>
-                      <span class="theme-dot" style="background-color: #ffffff;" title="Duet (White)"></span>
-                    </div>
-                  </button>
-
-                  <button type="button" class="theme-btn" data-theme="monochrome_slate" id="btn-theme-slate">
-                    <span class="theme-name">Minimalist Slate</span>
-                    <div class="theme-dots">
-                      <span class="theme-dot" style="background-color: #e2e8f0;" title="Singer 1 (Slate)"></span>
-                      <span class="theme-dot" style="background-color: #94a3b8;" title="Singer 2 (Zinc)"></span>
-                      <span class="theme-dot" style="background-color: #ffffff;" title="Duet (White)"></span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <!-- 3. Resolution & Frame Rate -->
-              <div class="staging-duo-grid">
-                <!-- Resolution -->
-                <div class="staging-duo-col">
-                  <label class="staging-label">RESOLUTION</label>
-                  <div class="duo-buttons-row">
-                    <button type="button" class="duo-btn active" data-quality="720p" id="btn-qual-720p">720p HD (Fast)</button>
-                    <button type="button" class="duo-btn" data-quality="1080p" id="btn-qual-1080p">1080p Full HD</button>
-                  </div>
-                </div>
-
-                <!-- Frame Rate -->
-                <div class="staging-duo-col">
-                  <label class="staging-label">FRAME RATE</label>
-                  <div class="duo-buttons-row">
-                    <button type="button" class="duo-btn active" data-fps="30" id="btn-fps-30">30 FPS (Standard)</button>
-                    <button type="button" class="duo-btn" data-fps="60" id="btn-fps-60">60 FPS (Ultra-Fluid)</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 4. Visual Overlay Elements -->
-              <div class="staging-section">
-                <label class="staging-label">VISUAL OVERLAY ELEMENTS</label>
-                <div class="overlay-elements-grid">
-                  <label class="overlay-check-card" for="chk-show-waveform">
-                    <input type="checkbox" id="chk-show-waveform">
-                    <span>Audio Waveform</span>
-                  </label>
-                  <label class="overlay-check-card" for="chk-show-singer-badges">
-                    <input type="checkbox" id="chk-show-singer-badges">
-                    <span>Singer Badges</span>
-                  </label>
-                  <label class="overlay-check-card" for="chk-show-intro-dots">
-                    <input type="checkbox" id="chk-show-intro-dots" checked>
-                    <span>Intro Count-In Dots</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- 5. Custom Track Title & Artist -->
-              <div class="staging-meta-grid">
-                <div class="staging-input-wrap">
-                  <label for="input-track-title" class="staging-field-label">Custom Track Title</label>
-                  <input type="text" id="input-track-title" class="staging-input" value="Electric Horizon (Duet Edition)" placeholder="e.g. Electric Horizon">
-                </div>
-
-                <div class="staging-input-wrap">
-                  <label for="input-track-artist" class="staging-field-label">Custom Artist / Vocalists</label>
-                  <input type="text" id="input-track-artist" class="staging-input" value="Karaoke Studio Ensemble" placeholder="e.g. Karaoke Studio Ensemble">
-                </div>
-              </div>
-
-            </div>
+        <div class="canvas-control-strip">
+          <label class="toggle-checkbox">
+            <input type="checkbox" id="chk-show-guides">
+            <span>Show Slot Coordinates Guide</span>
+          </label>
+          <div class="anti-record-badge" id="anti-record-badge" title="Anti-Screen-Recording Shield Active: Real-time preview is protected with a transparent security strip. Official export generates clean unwatermarked video.">
+            <span class="shield-pulse-dot"></span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Anti-Recording Shield: Active</span>
           </div>
-
+          <span class="slot-indicator" id="slot-indicator">Active slots: None</span>
         </div>
       </section>
 
