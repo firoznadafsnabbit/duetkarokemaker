@@ -17,19 +17,34 @@ const state = {
   audioDuration: 0,
   audioElement: new Audio(),
   isPlaying: false,
-  currentTime: 0,
+  currentTime: 14.8,
   playbackRate: 1.0,
+
+  // Video Staging & Preview Configuration (Matched with screenshot)
+  staging: {
+    aspectRatio: '16:9',
+    theme: 'obsidian_gold',
+    quality: '720p',
+    fps: 30,
+    showWaveform: false,
+    showSingerBadges: false,
+    showIntroDots: true,
+    trackTitle: 'Electric Horizon (Duet Edition)',
+    trackArtist: 'Karaoke Studio Ensemble'
+  },
+  volume: 0.85,
+  isMuted: false,
 
   // Real-Time Vocal Remover DSP Configuration
   vocalCutEnabled: false,
   vocalCutIntensity: 100,
   bassPreserveEnabled: true,
 
-  // Typography & Colors
+  // Typography & Colors (Obsidian & Gold default)
   fontSize: 85,
-  color1: '#00FFFF',
-  color2: '#FF00FF',
-  color3: '#FFFF00',
+  color1: '#f59e0b',
+  color2: '#10b981',
+  color3: '#ffffff',
 
   // Lyrics & Anti-Overlap Segments
   lyricsRaw: '',
@@ -96,6 +111,7 @@ const dom = {
   paneSrcYt: $('pane-src-yt'),
   chkAutoRenderVideo: $('chk-auto-render-video'),
   btnRunAutopilot: $('btn-run-autopilot'),
+  btnPreviewKaraoke: $('btn-preview-karaoke'),
   autopilotStepper: $('autopilot-stepper'),
   stepperStatusTitle: $('stepper-status-title'),
   stepperPctLabel: $('stepper-pct-label'),
@@ -169,6 +185,40 @@ const dom = {
   btnDismissRecordAlert: $('btn-dismiss-record-alert'),
   antiRecordBadge: $('anti-record-badge'),
 
+  // Video Preview Player & Transport (Screenshot Matched)
+  btnCanvasBigPlay: $('btn-canvas-big-play'),
+  previewCurrentTime: $('preview-current-time'),
+  previewTimeScrubber: $('preview-time-scrubber'),
+  previewTotalDuration: $('preview-total-duration'),
+  btnPreviewPlayPause: $('btn-preview-play-pause'),
+  previewPlayIcon: $('preview-play-icon'),
+  previewPauseIcon: $('preview-pause-icon'),
+  btnPreviewRewind: $('btn-preview-rewind'),
+  btnPreviewForward: $('btn-preview-forward'),
+  btnPreviewMute: $('btn-preview-mute'),
+  previewVolIconOn: $('preview-vol-icon-on'),
+  previewVolIconOff: $('preview-vol-icon-off'),
+  previewVolumeSlider: $('preview-volume-slider'),
+  previewAspectBadge: $('preview-aspect-badge'),
+  btnPreviewFullscreen: $('btn-preview-fullscreen'),
+
+  // Video & Staging Settings Controls
+  btnAspect169: $('btn-aspect-16-9'),
+  btnAspect916: $('btn-aspect-9-16'),
+  btnAspect11: $('btn-aspect-1-1'),
+  btnThemeObsidian: $('btn-theme-obsidian'),
+  btnThemeCyber: $('btn-theme-cyber'),
+  btnThemeSlate: $('btn-theme-slate'),
+  btnQual720p: $('btn-qual-720p'),
+  btnQual1080p: $('btn-qual-1080p'),
+  btnFps30: $('btn-fps-30'),
+  btnFps60: $('btn-fps-60'),
+  chkShowWaveform: $('chk-show-waveform'),
+  chkShowSingerBadges: $('chk-show-singer-badges'),
+  chkShowIntroDots: $('chk-show-intro-dots'),
+  inputTrackTitle: $('input-track-title'),
+  inputTrackArtist: $('input-track-artist'),
+
   // Export & Progress Elements
   btnRenderLive: $('btn-render-live'),
   btnRenderUniversal: $('btn-render-universal'),
@@ -232,6 +282,103 @@ const TimeUtil = {
     return Math.max(0, Math.round((seconds || 0) * 100));
   }
 };
+
+function formatClockTime(sec) {
+  if (!sec || isNaN(sec) || sec < 0) return '00:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+const RESOLUTIONS = {
+  '16:9': {
+    '1080p': { width: 1920, height: 1080 },
+    '720p': { width: 1280, height: 720 }
+  },
+  '9:16': {
+    '1080p': { width: 1080, height: 1920 },
+    '720p': { width: 720, height: 1280 }
+  },
+  '1:1': {
+    '1080p': { width: 1080, height: 1080 },
+    '720p': { width: 720, height: 720 }
+  }
+};
+
+const VIDEO_THEMES = {
+  obsidian_gold: {
+    id: 'obsidian_gold',
+    name: 'Obsidian & Gold',
+    bgColor: '#090b0e',
+    bgSecondary: '#141820',
+    singer1Color: '#f59e0b',
+    singer2Color: '#10b981',
+    bothColor: '#ffffff',
+    dimColor: '#525b6c',
+    visualizerColor: '#f59e0b',
+    particleColor: 'rgba(245, 158, 11, 0.15)'
+  },
+  cyber_emerald: {
+    id: 'cyber_emerald',
+    name: 'Cyber Emerald',
+    bgColor: '#070f0d',
+    bgSecondary: '#0f201b',
+    singer1Color: '#10b981',
+    singer2Color: '#06b6d4',
+    bothColor: '#ffffff',
+    dimColor: '#4b635c',
+    visualizerColor: '#10b981',
+    particleColor: 'rgba(16, 185, 129, 0.15)'
+  },
+  monochrome_slate: {
+    id: 'monochrome_slate',
+    name: 'Minimalist Slate',
+    bgColor: '#0b0d11',
+    bgSecondary: '#161a22',
+    singer1Color: '#e2e8f0',
+    singer2Color: '#94a3b8',
+    bothColor: '#ffffff',
+    dimColor: '#475569',
+    visualizerColor: '#94a3b8',
+    particleColor: 'rgba(255, 255, 255, 0.10)'
+  }
+};
+
+const DEMO_LYRICS_LINES = [
+  { startTime: 2.0, endTime: 5.5, singer: 'singer1', singerLabel: 'Singer 1', text: 'City lights are waking in the night' },
+  { startTime: 6.0, endTime: 9.5, singer: 'singer2', singerLabel: 'Singer 2', text: 'Footsteps echoing beneath the neon signs' },
+  { startTime: 10.0, endTime: 13.5, singer: 'both', singerLabel: 'Both', text: 'We run across the digital divide' },
+  {
+    startTime: 14.0,
+    endTime: 17.5,
+    singer: 'both',
+    singerLabel: 'Both',
+    text: 'Never look back again',
+    words: [
+      { text: 'Never ', startTime: 14.0, endTime: 14.5 },
+      { text: 'look ', startTime: 14.5, endTime: 15.2 },
+      { text: 'back ', startTime: 15.2, endTime: 15.8 },
+      { text: 'again', startTime: 15.8, endTime: 16.8 }
+    ]
+  },
+  {
+    startTime: 18.0,
+    endTime: 21.5,
+    singer: 'both',
+    singerLabel: 'Both',
+    text: 'Electric horizons guide the way',
+    words: [
+      { text: 'Electric ', startTime: 18.0, endTime: 18.7 },
+      { text: 'horizons ', startTime: 18.7, endTime: 19.4 },
+      { text: 'guide ', startTime: 19.4, endTime: 20.0 },
+      { text: 'the ', startTime: 20.0, endTime: 20.4 },
+      { text: 'way', startTime: 20.4, endTime: 21.2 }
+    ]
+  },
+  { startTime: 22.0, endTime: 25.5, singer: 'singer1', singerLabel: 'Singer 1', text: 'Through the shadows of yesterday' },
+  { startTime: 26.0, endTime: 29.0, singer: 'singer2', singerLabel: 'Singer 2', text: 'Until tomorrow turns to gold' },
+  { startTime: 29.5, endTime: 32.0, singer: 'both', singerLabel: 'Both', text: 'A melody that never grows old' }
+];
 
 const hexToAssColor = (hex) => {
   const clean = hex.replace('#', '').trim();
@@ -430,9 +577,9 @@ const VocalDspEngine = {
 // 5. LYRIC PARSER & ANTI-OVERLAP SCHEDULER
 // ==========================================
 function parseManualTimestamps(text) {
-  const PATTERN_BRACKET = /^\[\s*([\d:.]+)\s*-\s*([\d:.]+)\s*\](.*)$/;
-  const PATTERN_COMMA = /^([\d:.]+)\s*,\s*([\d:.]+)(.*)$/;
-  const PATTERN_TAG_PREFIX = /^(\[[123]\])\s*\[\s*([\d:.]+)\s*-\s*([\d:.]+)\s*\](.*)$/;
+  const PATTERN_TAG_PREFIX = /^(\[[123]\])\s*\[?\s*([\d:.]+)\s*-\s*([\d:.]+)\s*\]?(.*)$/;
+  const PATTERN_BRACKET = /^\[?\s*([\d:.]+)\s*-\s*([\d:.]+)\s*\]?(.*)$/;
+  const PATTERN_COMMA = /^(\[[123]\])?\s*([\d:.]+)\s*,\s*([\d:.]+)(.*)$/;
 
   const lines = text.split('\n');
   const rawSegments = [];
@@ -449,9 +596,9 @@ function parseManualTimestamps(text) {
     let endStr = null;
     let inlineLyric = null;
 
+    const mp = line.match(PATTERN_TAG_PREFIX);
     const mb = line.match(PATTERN_BRACKET);
     const mc = line.match(PATTERN_COMMA);
-    const mp = line.match(PATTERN_TAG_PREFIX);
 
     if (mp) {
       startStr = mp[2];
@@ -462,9 +609,9 @@ function parseManualTimestamps(text) {
       endStr = mb[2];
       inlineLyric = mb[3];
     } else if (mc) {
-      startStr = mc[1];
-      endStr = mc[2];
-      inlineLyric = mc[3];
+      startStr = mc[2];
+      endStr = mc[3];
+      inlineLyric = mc[1] ? `${mc[1]} ${mc[4]}` : mc[4];
     }
 
     if (startStr && endStr) {
@@ -499,6 +646,45 @@ function parseManualTimestamps(text) {
       }
     }
     i++;
+  }
+
+  // Graceful fallback: If no range timestamps found, support standard single-timestamp LRC format [MM:SS.xx]
+  if (rawSegments.length === 0) {
+    const PATTERN_LRC_LINE = /^(\[[123]\])?\s*\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\](.*)$/;
+    const lrcItems = [];
+    for (const l of lines) {
+      const trimmed = l.trim();
+      const m = trimmed.match(PATTERN_LRC_LINE);
+      if (m) {
+        const tag = m[1] || '';
+        const mins = parseInt(m[2], 10);
+        const secs = parseFloat(m[3]);
+        const startSec = mins * 60 + secs;
+        const text = (m[4] || '').trim();
+        if (text && !/^(?:by:|ar:|ti:|al:|length:|re:)/i.test(text)) {
+          let colorMode = 1;
+          const colorMatch = (tag + ' ' + text).match(/\[([123])\]/);
+          if (colorMatch) {
+            colorMode = parseInt(colorMatch[1], 10);
+          }
+          const cleanText = text.replace(/\[[123]\]/g, '').trim();
+          lrcItems.push({ startSec, text: cleanText, colorMode });
+        }
+      }
+    }
+    for (let k = 0; k < lrcItems.length; k++) {
+      const cur = lrcItems[k];
+      const next = lrcItems[k + 1];
+      let endSec = next ? next.startSec : cur.startSec + 4.5;
+      if (endSec <= cur.startSec) endSec = cur.startSec + 3.0;
+      rawSegments.push({
+        start: cur.startSec,
+        end: endSec,
+        text: cur.text,
+        colorMode: cur.colorMode,
+        words: assignProportionalWordTimings(cur.text, cur.startSec, endSec)
+      });
+    }
   }
 
   if (rawSegments.length === 0) return [];
@@ -584,234 +770,383 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 }
 
 // ==========================================
-// 7. REAL-TIME CANVAS KARAOKE RENDER ENGINE
+// 7. REAL-TIME CANVAS KARAOKE RENDER ENGINE (SCREENSHOT-MATCHED)
 // ==========================================
-function renderCanvasFrame(t, isCleanExport = false) {
-  // Clear canvas to black
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+function getActiveLines() {
+  if (state.segments && state.segments.length > 0) {
+    return state.segments.map(seg => ({
+      startTime: seg.start,
+      endTime: seg.end,
+      text: seg.text,
+      singer: seg.colorMode === 1 ? 'singer1' : seg.colorMode === 2 ? 'singer2' : 'both',
+      singerLabel: seg.colorMode === 1 ? 'Singer 1' : seg.colorMode === 2 ? 'Singer 2' : 'Both',
+      words: (seg.words || []).map(w => ({
+        text: w.word || w.text || '',
+        startTime: w.start,
+        endTime: w.end
+      }))
+    }));
+  }
+  return DEMO_LYRICS_LINES;
+}
 
-  if (state.segments.length === 0) {
-    ctx.save();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '600 44px "Outfit", sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.fillText('1080p Duet Karaoke Canvas Ready', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 25);
-    ctx.font = '400 28px "Outfit", sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.fillText('Upload an audio file or paste a YouTube song to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 35);
-    ctx.restore();
-    if (dom.slotIndicator) dom.slotIndicator.textContent = 'Active slots: None';
-    if (!isCleanExport && !state.isCleanExporting) {
-      drawAntiRecordingShield(t);
+function getSingerColor(singer, theme) {
+  if (singer === 'singer1') return state.color1 || theme.singer1Color;
+  if (singer === 'singer2') return state.color2 || theme.singer2Color;
+  return state.color3 || theme.bothColor;
+}
+
+function drawDeterministicParticles(ctx, width, height, t, particleColor) {
+  ctx.save();
+  ctx.fillStyle = particleColor || 'rgba(245, 158, 11, 0.15)';
+  const particleCount = 28;
+
+  for (let i = 0; i < particleCount; i++) {
+    const seed = i * 137.5;
+    const speed = 0.15 + (i % 5) * 0.05;
+    const x = ((Math.sin(seed) * 0.5 + 0.5) * width + Math.cos(t * speed + i) * 40) % width;
+    const y = ((Math.cos(seed) * 0.5 + 0.5) * height - (t * 20 * speed + i * 25)) % height;
+    const normY = y < 0 ? y + height : y;
+    const radius = 1.5 + (i % 3);
+
+    ctx.beginPath();
+    ctx.arc(x, normY, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawHeader(ctx, width, height, isVertical, theme) {
+  const title = (state.staging && state.staging.trackTitle) || 'Electric Horizon (Duet Edition)';
+  const artist = (state.staging && state.staging.trackArtist) || 'Karaoke Studio Ensemble';
+
+  ctx.save();
+  ctx.textAlign = 'center';
+
+  const headerY = isVertical ? height * 0.09 : height * 0.11;
+  const titleSize = isVertical ? Math.round(width * 0.052) : Math.round(height * 0.045);
+  const artistSize = Math.round(titleSize * 0.65);
+
+  // Track Title
+  ctx.font = `700 ${titleSize}px "Outfit", sans-serif`;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(title, width / 2, headerY);
+
+  // Artist
+  ctx.font = `500 ${artistSize}px "Outfit", sans-serif`;
+  ctx.fillStyle = theme.dimColor || '#525b6c';
+  ctx.fillText(artist, width / 2, headerY + artistSize * 1.5);
+
+  ctx.restore();
+}
+
+function drawVisualizer(ctx, width, height, t, isVertical, isSquare, theme) {
+  ctx.save();
+  const barCount = isVertical ? 32 : 56;
+  const vizWidth = isVertical ? width * 0.85 : width * 0.70;
+  const vizY = isVertical ? height * 0.82 : height * 0.84;
+  const barSpacing = vizWidth / barCount;
+  const barW = Math.max(2, barSpacing * 0.6);
+  const startX = (width - vizWidth) / 2;
+
+  for (let i = 0; i < barCount; i++) {
+    const harmonic1 = Math.sin(t * 4 + i * 0.3) * 0.5 + 0.5;
+    const harmonic2 = Math.cos(t * 8 - i * 0.2) * 0.3;
+    const amplitude = Math.max(0.08, Math.min(0.95, (harmonic1 + harmonic2) * 0.7));
+
+    const maxBarH = isVertical ? height * 0.08 : height * 0.10;
+    const barH = Math.max(4, amplitude * maxBarH);
+    const x = startX + i * barSpacing;
+    const y = vizY - barH / 2;
+
+    ctx.fillStyle = theme.visualizerColor || theme.singer1Color || '#f59e0b';
+    ctx.globalAlpha = 0.45 + amplitude * 0.55;
+
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, barW, barH, barW / 2);
+    } else {
+      ctx.rect(x, y, barW, barH);
     }
-    return;
+    ctx.fill();
   }
+  ctx.restore();
+}
 
-  // Filter and slot active segments
-  const activeSegments = state.segments.filter(seg => t >= seg.appear && t <= seg.disappear);
-  const slotActive = [null, null, null];
-  for (const seg of activeSegments) {
-    slotActive[seg.slot] = seg;
-  }
+function drawIntroCountIn(ctx, width, height, t, theme, firstLineStart) {
+  if (firstLineStart <= 1.0) return;
+  const leadTime = 3.0;
+  const introStart = Math.max(0, firstLineStart - leadTime);
 
-  // Render each active slot line
-  for (let slot = 0; slot < 3; slot++) {
-    const seg = slotActive[slot];
-    if (!seg) continue;
+  if (t >= introStart && t < firstLineStart) {
+    ctx.save();
+    const countProgress = (t - introStart) / leadTime;
+    const activeDot = Math.floor(countProgress * 4);
 
-    const singerColor = seg.colorMode === 1 ? state.color1 :
-                        seg.colorMode === 2 ? state.color2 : state.color3;
+    const dotY = height * 0.32;
+    const dotSpacing = 36;
+    const totalWidth = 3 * dotSpacing;
+    const startX = (width - totalWidth) / 2;
 
-    renderKaraokeLine(seg, t, seg.yPos, singerColor);
-  }
+    for (let d = 0; d < 4; d++) {
+      const dx = startX + d * dotSpacing;
+      const isActive = d <= activeDot;
+      ctx.beginPath();
+      ctx.arc(dx, dotY, isActive ? 8 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = isActive ? theme.singer1Color : (theme.dimColor || '#525b6c');
+      ctx.globalAlpha = isActive ? 1.0 : 0.35;
+      ctx.fill();
+    }
 
-  // Update slot monitor text
-  if (dom.slotIndicator) {
-    dom.slotIndicator.textContent = slotActive
-      .map((s, idx) => `Slot ${idx}: ${s ? 'Active' : 'Idle'}`)
-      .join(' | ');
-  }
+    ctx.font = `600 ${Math.round(height * 0.022)}px "Outfit", sans-serif`;
+    ctx.fillStyle = theme.dimColor || '#525b6c';
+    ctx.textAlign = 'center';
+    ctx.fillText('GET READY', width / 2, dotY - 22);
 
-  // Draw Anti-Screen-Recording Security Layer across preview canvas
-  if (!isCleanExport && !state.isCleanExporting) {
-    drawAntiRecordingShield(t);
+    ctx.restore();
   }
 }
 
-/**
- * 7.1 DYNAMIC ANTI-SCREEN-RECORDING SECURITY SHIELD
- * Renders an animated semi-transparent frosted security strip across the active
- * lyrics zone, optical encoder micro-scanlines, and dynamic session watermarks.
- * Renders unauthorized screen recordings completely useless for publication,
- * while allowing the creator in-browser to clearly view and synchronize lyrics.
- */
-function drawAntiRecordingShield(t) {
-  if (!state.antiRecordShield || !state.antiRecordShield.enabled) return;
-
+function drawSingerBadge(ctx, width, y, label, color, isActive) {
   ctx.save();
+  ctx.font = '600 13px "Outfit", sans-serif';
+  const metrics = ctx.measureText(label.toUpperCase());
+  const badgeW = metrics.width + 20;
+  const badgeH = 20;
+  const badgeX = (width - badgeW) / 2;
 
-  // 1. Optical Micro-Scanlines (Causes temporal compression distortion & moiré in video encoders)
-  if (state.antiRecordShield.showScanlines) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
-    for (let y = 0; y < CANVAS_HEIGHT; y += 4) {
-      ctx.fillRect(0, y, CANVAS_WIDTH, 1);
-    }
+  ctx.fillStyle = isActive ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.3)';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(badgeX, y - badgeH / 2, badgeW, badgeH, 10);
+  } else {
+    ctx.rect(badgeX, y - badgeH / 2, badgeW, badgeH);
   }
+  ctx.fill();
+  ctx.stroke();
 
-  // 2. Translucent Frosted Security Strip across Center Lyrics Zone
-  if (state.antiRecordShield.showStrip) {
-    const stripHeight = 110;
-    const stripY = 485; // Centered at Y=540 across active lyric area
-
-    // A. Frosted semi-transparent dark backdrop
-    const stripGradient = ctx.createLinearGradient(0, stripY, 0, stripY + stripHeight);
-    stripGradient.addColorStop(0, 'rgba(15, 23, 42, 0.52)');
-    stripGradient.addColorStop(0.5, 'rgba(10, 15, 30, 0.62)');
-    stripGradient.addColorStop(1, 'rgba(15, 23, 42, 0.52)');
-    ctx.fillStyle = stripGradient;
-    ctx.fillRect(0, stripY, CANVAS_WIDTH, stripHeight);
-
-    // B. Glowing perimeter border lines
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
-    ctx.beginPath();
-    ctx.moveTo(0, stripY);
-    ctx.lineTo(CANVAS_WIDTH, stripY);
-    ctx.moveTo(0, stripY + stripHeight);
-    ctx.lineTo(CANVAS_WIDTH, stripY + stripHeight);
-    ctx.stroke();
-
-    // C. Angled semi-transparent hazard/security hash lines
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, stripY, CANVAS_WIDTH, stripHeight);
-    ctx.clip();
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.lineWidth = 10;
-    const spacing = 48;
-    for (let x = -stripHeight; x < CANVAS_WIDTH + stripHeight; x += spacing) {
-      ctx.beginPath();
-      ctx.moveTo(x, stripY);
-      ctx.lineTo(x + stripHeight, stripY + stripHeight);
-      ctx.stroke();
-    }
-
-    // D. Animated dynamic light sweep (prevents AI static watermark inpainting)
-    const sweepProgress = ((t * 260) % (CANVAS_WIDTH + 600)) - 300;
-    const lightSweep = ctx.createLinearGradient(sweepProgress - 160, 0, sweepProgress + 160, 0);
-    lightSweep.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    lightSweep.addColorStop(0.5, 'rgba(255, 255, 255, 0.10)');
-    lightSweep.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = lightSweep;
-    ctx.fillRect(0, stripY, CANVAS_WIDTH, stripHeight);
-
-    ctx.restore();
-
-    // E. High-visibility semi-transparent security typography
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Primary Warning Text (White with shadow)
-    ctx.font = '700 28px "Outfit", "Noto Sans", Arial, sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-    ctx.shadowBlur = 6;
-    ctx.fillText('🛡️ PREVIEW ONLY • SCREEN RECORDING PROHIBITED • EXPORT TO REMOVE WATERMARK', CANVAS_WIDTH / 2, stripY + 38);
-
-    // Subtitle & Dynamic Session Stamp
-    const userEmail = (window.KaraokeAuth && window.KaraokeAuth.getCurrentUser && window.KaraokeAuth.getCurrentUser()?.email) || 'GUEST-SESSION';
-    ctx.font = '500 18px "JetBrains Mono", monospace, sans-serif';
-    ctx.fillStyle = 'rgba(224, 231, 255, 0.58)';
-    ctx.fillText(`DUET KARAOKE MAKER • ANTI-PIRACY SHIELD • USER: ${userEmail} • TIME: ${TimeUtil.toDisplay(t)}`, CANVAS_WIDTH / 2, stripY + 75);
-  }
-
-  // 3. Subtle Diagonal Background Watermark
-  ctx.save();
-  ctx.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-  ctx.rotate(-14 * Math.PI / 180);
-  ctx.font = '800 48px "Outfit", sans-serif';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('PROTECTED PREVIEW • DO NOT RECORD • EXPORT FOR 1080P CLEAN VIDEO', 0, -180);
-  ctx.fillText('PROTECTED PREVIEW • DO NOT RECORD • EXPORT FOR 1080P CLEAN VIDEO', 0, 180);
-  ctx.restore();
-
-  // 4. Subtle Corner Stamp
-  ctx.font = '600 20px "Outfit", sans-serif';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-  ctx.textAlign = 'right';
-  ctx.fillText('🔒 LIVE CANVAS PREVIEW — NOT FOR RECORDING', CANVAS_WIDTH - 30, CANVAS_HEIGHT - 25);
+  ctx.fillText(label.toUpperCase(), width / 2, y);
 
   ctx.restore();
 }
 
-function renderKaraokeLine(seg, t, yPos, singerColor) {
-  const words = seg.words || [];
-  if (words.length === 0) return;
+function drawActiveLineWithWipe(ctx, width, lineY, line, t, activeColor, fontSize) {
+  const text = line.text;
+  const textMetrics = ctx.measureText(text);
+  const textWidth = textMetrics.width;
+  const startX = (width - textWidth) / 2;
 
-  const fontSize = parseInt(state.fontSize, 10);
-  ctx.font = `bold ${fontSize}px "Outfit", "Noto Sans", Arial, sans-serif`;
-  ctx.textBaseline = 'middle';
+  let progress = 0;
+  const lineDuration = Math.max(0.1, line.endTime - line.startTime);
 
-  const spaceWidth = ctx.measureText(' ').width;
-  const wordMetrics = words.map(w => ({
-    text: w.word,
-    width: ctx.measureText(w.word).width,
-    start: w.start,
-    end: w.end
-  }));
+  if (line.words && line.words.length > 0) {
+    let accumulatedWidth = 0;
+    let activeWordFound = false;
 
-  const totalLineWidth = wordMetrics.reduce((acc, m) => acc + m.width, 0) + (wordMetrics.length - 1) * spaceWidth;
-  let currentX = (CANVAS_WIDTH - totalLineWidth) / 2;
+    for (let w = 0; w < line.words.length; w++) {
+      const word = line.words[w];
+      const wordWidth = ctx.measureText(word.text).width;
 
-  // Render words with outline stroke and karaoke sweep
-  for (const wm of wordMetrics) {
-    drawWord(wm, currentX, yPos, fontSize, singerColor, t);
-    currentX += wm.width + spaceWidth;
-  }
-}
+      if (t >= word.endTime) {
+        accumulatedWidth += wordWidth;
+      } else if (t >= word.startTime && t < word.endTime) {
+        const wordDur = Math.max(0.05, word.endTime - word.startTime);
+        const wordProg = (t - word.startTime) / wordDur;
+        accumulatedWidth += wordWidth * wordProg;
+        activeWordFound = true;
+        break;
+      } else {
+        break;
+      }
+    }
 
-function drawWord(wm, x, y, fontSize, singerColor, t) {
-  // 1. Text shadow & outline stroke
-  ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetX = 3;
-  ctx.shadowOffsetY = 3;
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = Math.max(4, fontSize * 0.08);
-  ctx.lineJoin = 'round';
-  ctx.strokeText(wm.text, x, y);
-  ctx.restore();
-
-  // 2. Karaoke fill: White -> Progressive Gradient Sweep -> Singer Color
-  if (t < wm.start) {
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(wm.text, x, y);
-  } else if (t >= wm.end) {
-    ctx.fillStyle = singerColor;
-    ctx.fillText(wm.text, x, y);
+    if (!activeWordFound && t >= line.endTime) {
+      progress = 1.0;
+    } else {
+      progress = Math.min(1.0, Math.max(0, accumulatedWidth / textWidth));
+    }
   } else {
-    const ratio = Math.max(0, Math.min(1, (t - wm.start) / Math.max(0.001, wm.end - wm.start)));
-    const gradient = ctx.createLinearGradient(x, 0, x + wm.width, 0);
-    gradient.addColorStop(0, singerColor);
-    gradient.addColorStop(ratio, singerColor);
-    gradient.addColorStop(Math.min(1, ratio + 0.001), '#FFFFFF');
-    gradient.addColorStop(1, '#FFFFFF');
+    progress = Math.min(1.0, Math.max(0, (t - line.startTime) / lineDuration));
+  }
 
-    ctx.fillStyle = gradient;
-    ctx.fillText(wm.text, x, y);
+  const wipeX = startX + textWidth * progress;
+
+  // 1. Un-highlighted text in off-white / slate
+  ctx.save();
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText(text, width / 2, lineY);
+  ctx.restore();
+
+  // 2. Highlighted text clipped up to wipeX
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(startX - 15, lineY - fontSize * 1.2, (wipeX - startX) + 15, fontSize * 1.8);
+  ctx.clip();
+
+  ctx.fillStyle = activeColor;
+  ctx.shadowColor = activeColor;
+  ctx.shadowBlur = 14;
+  ctx.fillText(text, width / 2, lineY);
+
+  ctx.restore();
+}
+
+function drawScrollingLyrics(ctx, width, height, t, isVertical, isSquare, theme) {
+  const lines = getActiveLines();
+  if (lines.length === 0) return;
+
+  // Find active line index
+  let activeIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (t >= lines[i].startTime && t <= lines[i].endTime) {
+      activeIndex = i;
+      break;
+    }
+  }
+
+  if (activeIndex === -1) {
+    for (let i = 0; i < lines.length; i++) {
+      if (t < lines[i].startTime) {
+        activeIndex = Math.max(0, i - 0.5);
+        break;
+      }
+    }
+    if (activeIndex === -1) activeIndex = lines.length - 1;
+  }
+
+  const focalY = isVertical ? height * 0.46 : height * 0.48;
+  const baseFontSize = isVertical ? Math.round(width * 0.062) : Math.round(height * 0.058);
+  const lineSpacing = baseFontSize * 1.85;
+
+  const range = 2; // -2 to +2 lines visible
+  const centerFloor = Math.floor(activeIndex);
+
+  for (let offset = -range; offset <= range; offset++) {
+    const lineIdx = centerFloor + offset;
+    if (lineIdx < 0 || lineIdx >= lines.length) continue;
+
+    const line = lines[lineIdx];
+    const isCurrentActive = Math.abs(lineIdx - activeIndex) < 0.5 && t >= line.startTime && t <= line.endTime;
+
+    const distFromCenter = lineIdx - activeIndex;
+    const lineY = focalY + distFromCenter * lineSpacing;
+
+    const scale = isCurrentActive ? 1.05 : Math.max(0.72, 1.0 - Math.abs(distFromCenter) * 0.16);
+    const opacity = isCurrentActive ? 1.0 : Math.max(0.20, 0.65 - Math.abs(distFromCenter) * 0.22);
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.textAlign = 'center';
+
+    const currentFontSize = Math.round(baseFontSize * scale);
+    ctx.font = `700 ${currentFontSize}px "Outfit", sans-serif`;
+
+    const singerColor = getSingerColor(line.singer, theme);
+
+    if (state.staging?.showSingerBadges && (isCurrentActive || Math.abs(distFromCenter) <= 1)) {
+      drawSingerBadge(ctx, width, lineY - currentFontSize * 0.85, line.singerLabel || 'DUET', singerColor, isCurrentActive);
+    }
+
+    if (isCurrentActive) {
+      drawActiveLineWithWipe(ctx, width, lineY, line, t, singerColor, currentFontSize);
+    } else {
+      ctx.fillStyle = theme.dimColor || '#525b6c';
+      ctx.fillText(line.text, width / 2, lineY);
+    }
+
+    ctx.restore();
   }
 }
 
-function animationLoop() {
-  if (state.isPlaying && state.audioElement) {
-    state.currentTime = state.audioElement.currentTime;
-    dom.timeScrubber.value = state.currentTime;
+function drawFooter(ctx, width, height, theme) {
+  ctx.save();
+  ctx.font = '500 11px "Outfit", sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.textAlign = 'center';
+  ctx.fillText('100% Client-Side Sandbox • Karaoke Studio Engine', width / 2, height - 16);
+  ctx.restore();
+}
+
+function renderCanvasFrame(t, isCleanExport = false) {
+  const width = dom.canvas.width;
+  const height = dom.canvas.height;
+  const theme = VIDEO_THEMES[state.staging?.theme] || VIDEO_THEMES.obsidian_gold;
+  const isVertical = state.staging?.aspectRatio === '9:16';
+  const isSquare = state.staging?.aspectRatio === '1:1';
+
+  // 1. Clear & Background
+  ctx.fillStyle = theme.bgColor;
+  ctx.fillRect(0, 0, width, height);
+
+  // Subtle radial gradient background for depth
+  const bgGrad = ctx.createRadialGradient(
+    width / 2, height * 0.45, 50,
+    width / 2, height * 0.45, width * 0.85
+  );
+  bgGrad.addColorStop(0, theme.bgSecondary);
+  bgGrad.addColorStop(1, theme.bgColor);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Subtle ambient background floating particles
+  drawDeterministicParticles(ctx, width, height, t, theme.particleColor);
+
+  // 2. Header: Title & Artist
+  drawHeader(ctx, width, height, isVertical, theme);
+
+  // 3. Audio Visualizer / Waveform (if enabled)
+  if (state.staging?.showWaveform) {
+    drawVisualizer(ctx, width, height, t, isVertical, isSquare, theme);
+  }
+
+  // 4. Intro Count-in Dots (if enabled)
+  if (state.staging?.showIntroDots) {
+    const lines = getActiveLines();
+    const firstStart = lines[0]?.startTime ?? 2.0;
+    drawIntroCountIn(ctx, width, height, t, theme, firstStart);
+  }
+
+  // 5. Kinetic Scrolling Karaoke Lyrics
+  drawScrollingLyrics(ctx, width, height, t, isVertical, isSquare, theme);
+
+  // 6. Subtle Watermark / Footer
+  drawFooter(ctx, width, height, theme);
+
+  // Update slot indicator if present
+  if (dom.slotIndicator) {
+    dom.slotIndicator.textContent = state.segments.length > 0
+      ? `${state.segments.length} lines active`
+      : 'Demo Mode: Electric Horizon (Duet Edition)';
+  }
+}
+
+// ==========================================
+// 8. AUDIO ENGINE & PLAYBACK CONTROLS
+// ==========================================
+let lastLoopTimestamp = performance.now();
+function animationLoop(now = performance.now()) {
+  const dt = Math.min(0.1, (now - lastLoopTimestamp) / 1000);
+  lastLoopTimestamp = now;
+
+  if (state.isPlaying) {
+    if (state.audioFile && state.audioElement && !state.audioElement.paused) {
+      state.currentTime = state.audioElement.currentTime;
+    } else if (!state.audioFile) {
+      // Smooth demo loop progression
+      const demoDur = 32;
+      state.currentTime += dt;
+      if (state.currentTime >= demoDur) {
+        state.currentTime = 0;
+      }
+    }
+    if (dom.timeScrubber) dom.timeScrubber.value = state.currentTime;
+    if (dom.previewTimeScrubber) dom.previewTimeScrubber.value = state.currentTime;
     updateTimeDisplay();
   }
   renderCanvasFrame(state.currentTime);
@@ -819,15 +1154,74 @@ function animationLoop() {
 }
 
 function updateTimeDisplay() {
-  dom.timeDisplay.textContent = `${TimeUtil.toDisplay(state.currentTime)} / ${TimeUtil.toDisplay(state.audioDuration)}`;
+  const dur = state.audioDuration || 32;
+  if (dom.timeDisplay) {
+    dom.timeDisplay.textContent = `${TimeUtil.toDisplay(state.currentTime)} / ${TimeUtil.toDisplay(dur)}`;
+  }
   if (dom.builderLiveSongTime) {
     dom.builderLiveSongTime.textContent = TimeUtil.toDisplay(state.currentTime);
   }
+  if (dom.previewCurrentTime) {
+    dom.previewCurrentTime.textContent = formatClockTime(state.currentTime);
+  }
+  if (dom.previewTotalDuration) {
+    dom.previewTotalDuration.textContent = formatClockTime(dur);
+  }
+  if (dom.previewTimeScrubber) {
+    dom.previewTimeScrubber.max = dur;
+    dom.previewTimeScrubber.value = state.currentTime;
+  }
 }
 
-// ==========================================
-// 8. AUDIO ENGINE & PLAYBACK CONTROLS
-// ==========================================
+function setPlaybackState(isPlaying) {
+  state.isPlaying = isPlaying;
+  if (dom.playIcon) dom.playIcon.style.display = isPlaying ? 'none' : 'block';
+  if (dom.pauseIcon) dom.pauseIcon.style.display = isPlaying ? 'block' : 'none';
+  if (dom.previewPlayIcon) dom.previewPlayIcon.style.display = isPlaying ? 'none' : 'block';
+  if (dom.previewPauseIcon) dom.previewPauseIcon.style.display = isPlaying ? 'block' : 'none';
+  if (dom.btnCanvasBigPlay) dom.btnCanvasBigPlay.style.display = isPlaying ? 'none' : 'flex';
+}
+
+function togglePlay() {
+  if (state.audioFile && state.audioElement && state.audioElement.src) {
+    VocalDspEngine.init(state.audioElement);
+    if (state.isPlaying) {
+      state.audioElement.pause();
+      setPlaybackState(false);
+    } else {
+      if (VocalDspEngine.ctx?.state === 'suspended') {
+        VocalDspEngine.ctx.resume();
+      }
+      state.audioElement.play().then(() => setPlaybackState(true)).catch(() => {});
+    }
+  } else {
+    // Demo mode: play / pause demo timeline smoothly
+    setPlaybackState(!state.isPlaying);
+  }
+}
+
+function pauseAudio() {
+  if (state.isPlaying) {
+    if (state.audioElement && state.audioFile) {
+      state.audioElement.pause();
+    }
+    setPlaybackState(false);
+  }
+}
+
+function seekToTime(t) {
+  const maxDur = state.audioDuration || 32;
+  const clamped = Math.max(0, Math.min(maxDur, t));
+  state.currentTime = clamped;
+  if (state.audioElement && state.audioFile) {
+    state.audioElement.currentTime = clamped;
+  }
+  if (dom.timeScrubber) dom.timeScrubber.value = clamped;
+  if (dom.previewTimeScrubber) dom.previewTimeScrubber.value = clamped;
+  updateTimeDisplay();
+  renderCanvasFrame(clamped);
+}
+
 function loadAudioFile(file) {
   state.currentRenderPaid = false;
   state.audioFile = file;
@@ -840,42 +1234,12 @@ function loadAudioFile(file) {
     state.audioDuration = state.audioElement.duration || 0;
     dom.audioDuration.textContent = TimeUtil.toDisplay(state.audioDuration);
     dom.timeScrubber.max = state.audioDuration;
+    if (dom.previewTimeScrubber) dom.previewTimeScrubber.max = state.audioDuration;
+    if (dom.previewTotalDuration) dom.previewTotalDuration.textContent = formatClockTime(state.audioDuration);
+    state.currentTime = 0;
     updateTimeDisplay();
     renderCanvasFrame(0);
   };
-}
-
-function togglePlay() {
-  if (!state.audioElement.src) {
-    alert('Please upload an audio track or import from YouTube first.');
-    return;
-  }
-
-  VocalDspEngine.init(state.audioElement);
-
-  if (state.isPlaying) {
-    state.audioElement.pause();
-    state.isPlaying = false;
-    dom.playIcon.style.display = 'block';
-    dom.pauseIcon.style.display = 'none';
-  } else {
-    if (VocalDspEngine.ctx?.state === 'suspended') {
-      VocalDspEngine.ctx.resume();
-    }
-    state.audioElement.play();
-    state.isPlaying = true;
-    dom.playIcon.style.display = 'none';
-    dom.pauseIcon.style.display = 'block';
-  }
-}
-
-function pauseAudio() {
-  if (state.isPlaying && state.audioElement) {
-    state.audioElement.pause();
-    state.isPlaying = false;
-    if (dom.playIcon) dom.playIcon.style.display = 'block';
-    if (dom.pauseIcon) dom.pauseIcon.style.display = 'none';
-  }
 }
 
 // ==========================================
@@ -1105,127 +1469,40 @@ async function runOneClickAutoDuet() {
   }
 
   const isFileMode = dom.tabSrcFile?.classList.contains('active');
-  const apiKey = (dom.ytApiKey?.value || localStorage.getItem('duet_gemini_api_key') || '').trim();
-  if (apiKey) {
-    try { localStorage.setItem('duet_gemini_api_key', apiKey); } catch (_) {}
-  }
-
   let title = 'Duet Song';
   let duration = 180;
-  let lyrics = '';
-  let language = 'Duet Song';
 
-  setAutopilotStep(1, '[1/4] Ingesting audio track & preparing analysis...');
-  if (dom.btnRunAutopilot) {
-    dom.btnRunAutopilot.disabled = true;
-    dom.btnRunAutopilot.innerHTML = '<span>Processing Duet Karaoke Video...</span>';
-  }
-
-  try {
-    if (isFileMode) {
-      const file = state.audioFile;
-      if (!file) {
-        alert('Please upload a song file (MP3, WAV, etc.) or drag & drop one into the box first.');
-        dom.audioFileInput?.click();
-        return;
-      }
-
+  // 1. Verify Audio Track
+  if (isFileMode) {
+    const file = state.audioFile;
+    if (!file && (!state.audioElement.src || state.audioElement.src === '')) {
+      alert('Please upload a song audio file (MP3, WAV, etc.) or drag & drop one into the box first.');
+      dom.audioFileInput?.click();
+      return;
+    }
+    if (file) {
       title = file.name.replace(/\.[^/.]+$/, '').replace(/[\-_]+/g, ' ').trim();
-
-      // Ensure local audio is loaded into state.audioElement
       if (!state.audioElement.src || !state.audioElement.src.startsWith('blob:')) {
         state.audioElement.src = URL.createObjectURL(file);
       }
+    }
+  } else {
+    // YouTube mode
+    const url = (dom.ytUrlInput?.value || '').trim();
+    if (!url && !state.audioElement.src) {
+      alert('Please paste a YouTube song link or upload an audio file first.');
+      dom.ytUrlInput?.focus();
+      return;
+    }
 
-      // Read duration from file
-      duration = await new Promise(resolve => {
-        if (state.audioDuration > 0) return resolve(state.audioDuration);
-        if (state.audioElement.duration && !isNaN(state.audioElement.duration)) {
-          return resolve(state.audioElement.duration);
-        }
-        state.audioElement.onloadedmetadata = () => resolve(state.audioElement.duration || 180);
-        setTimeout(() => resolve(state.audioElement.duration || 180), 2000);
-      });
-      state.audioDuration = duration;
-      dom.audioFilename.textContent = file.name;
-      dom.audioDuration.textContent = TimeUtil.toDisplay(duration);
-      dom.timeScrubber.max = duration;
-      dom.dropzonePrompt.style.display = 'none';
-      dom.audioLoadedCard.style.display = 'flex';
-
-      // Step 2: On-device client AI / LRCLIB lyrics search (Zero 4.5MB upload limit!)
-      setAutopilotStep(2, apiKey
-        ? '[2/4] Detecting singing language & separating Male [1] / Female [2] / Duet [3]...'
-        : '[2/4] Searching synchronized lyrics database & assigning Male [1] / Female [2]...'
-      );
-
-      const cleanSearchTitle = title
-        .replace(/[\(\[\{].*?[\)\]\}]/g, '')
-        .replace(/\b(?:feat|ft|official|video|audio|lyrics|remix|hd|4k)\b/gi, '')
-        .trim();
-
-      let lrclibData = null;
-      try {
-        const searchRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(cleanSearchTitle || title)}`);
-        if (searchRes.ok) {
-          const items = await searchRes.json();
-          if (Array.isArray(items) && items.length > 0) {
-            lrclibData = items.find(it => it.syncedLyrics) || items[0];
-          }
-        }
-      } catch (err) {
-        console.warn('LRCLIB lookup warning:', err);
-      }
-
-      if (apiKey) {
-        try {
-          const geminiResult = await askGeminiForDuet({
-            title: cleanSearchTitle || title,
-            duration,
-            existingLyrics: lrclibData?.syncedLyrics || lrclibData?.plainLyrics || '',
-            apiKey
-          });
-          if (geminiResult.lyrics) {
-            lyrics = geminiResult.lyrics;
-            language = geminiResult.language || language;
-          }
-        } catch (gErr) {
-          console.warn('Gemini API warning, using LRCLIB:', gErr);
-        }
-      }
-
-      if (!lyrics && lrclibData) {
-        if (lrclibData.syncedLyrics) {
-          lyrics = convertLrcToDuetKaraoke(lrclibData.syncedLyrics, duration);
-          language = detectLanguageFromText(`${cleanSearchTitle} ${lrclibData.trackName || ''} ${lyrics}`);
-        } else if (lrclibData.plainLyrics) {
-          lyrics = convertPlainLyricsToDuet(lrclibData.plainLyrics, duration);
-          language = detectLanguageFromText(`${cleanSearchTitle} ${lrclibData.trackName || ''} ${lyrics}`);
-        }
-      }
-
-      if (!lyrics) {
-        lyrics = generateMelodicDuetCues(cleanSearchTitle || title, duration);
-        language = detectLanguageFromText(cleanSearchTitle || title);
-      }
-
-    } else {
-      // YouTube Mode
-      const url = (dom.ytUrlInput?.value || '').trim();
-      if (!url) {
-        alert('Please paste a YouTube song link first (e.g. https://youtu.be/...)');
-        dom.ytUrlInput?.focus();
-        return;
-      }
-
+    if (url && (!state.audioElement.src || !state.audioFile?.serverAudioUrl)) {
+      setAutopilotStep(1, '[1/4] Ingesting YouTube audio stream...');
       const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
       if (isLocalHost) {
-        setAutopilotStep(2, '[2/4] Ingesting YouTube audio stream & analyzing voices locally...');
         const res = await fetch('/api/auto-duet', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, apiKey })
+          body: JSON.stringify({ url })
         });
         const text = await res.text();
         let data;
@@ -1235,93 +1512,84 @@ async function runOneClickAutoDuet() {
           throw new Error(`Server returned ${res.status}: ${text.slice(0, 100)}`);
         }
         if (!res.ok || data.status === 'error') {
-          throw new Error(data.message || 'Failed to auto-generate duet.');
+          throw new Error(data.message || 'Failed to extract YouTube audio.');
         }
 
         title = data.title;
-        language = data.language || 'Duet Song';
         duration = data.duration || 180;
-        lyrics = data.lyrics || '';
-
         state.audioFile = { name: `${title}.mp3`, serverAudioUrl: data.audioUrl };
         state.audioElement.src = data.audioUrl;
-        dom.audioFilename.textContent = `${title} [${language}]`;
+        dom.audioFilename.textContent = title;
         dom.dropzonePrompt.style.display = 'none';
         dom.audioLoadedCard.style.display = 'flex';
       } else {
-        // Vercel / Cloud Mode: Use oEmbed and direct lyrics search
-        setAutopilotStep(2, '[2/4] Fetching YouTube metadata and synchronized lyrics...');
-        let ytTitle = 'YouTube Duet';
-        try {
-          const oeRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-          if (oeRes.ok) {
-            const oeData = await oeRes.json();
-            ytTitle = oeData.title || ytTitle;
-          }
-        } catch (_) {}
-
-        title = ytTitle.replace(/[\(\[\{].*?[\)\]\}]/g, '').replace(/[\-_]+/g, ' ').trim();
-        const searchRes = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(title)}`);
-        let lrclibData = null;
-        if (searchRes.ok) {
-          const items = await searchRes.json();
-          if (Array.isArray(items) && items.length > 0) {
-            lrclibData = items.find(it => it.syncedLyrics) || items[0];
-          }
-        }
-
-        duration = lrclibData?.duration || 210;
-        if (apiKey) {
-          try {
-            const gResult = await askGeminiForDuet({
-              title,
-              duration,
-              existingLyrics: lrclibData?.syncedLyrics || lrclibData?.plainLyrics || '',
-              apiKey
-            });
-            if (gResult.lyrics) {
-              lyrics = gResult.lyrics;
-              language = gResult.language || language;
-            }
-          } catch (_) {}
-        }
-
-        if (!lyrics && lrclibData) {
-          if (lrclibData.syncedLyrics) {
-            lyrics = convertLrcToDuetKaraoke(lrclibData.syncedLyrics, duration);
-          } else if (lrclibData.plainLyrics) {
-            lyrics = convertPlainLyricsToDuet(lrclibData.plainLyrics, duration);
-          }
-        }
-
-        if (!lyrics) {
-          lyrics = generateMelodicDuetCues(title, duration);
-        }
-        language = detectLanguageFromText(`${title} ${lyrics}`);
-
-        dom.audioFilename.textContent = `${title} [${language}]`;
+        alert('On cloud preview, please use "Upload Audio Song" for instant browser processing with zero queue.');
+        return;
       }
     }
+  }
 
-    // Step 3: Populate studio state
-    setAutopilotStep(3, `[3/4] Detected "${language}": Arranging 5-section karaoke layout...`);
-
-    if (lyrics) {
-      dom.lyricsTextarea.value = lyrics;
-      parseAndUpdateLyrics();
+  // Ensure Audio Duration is resolved
+  duration = await new Promise(resolve => {
+    if (state.audioDuration > 0) return resolve(state.audioDuration);
+    if (state.audioElement.duration && !isNaN(state.audioElement.duration)) {
+      return resolve(state.audioElement.duration);
     }
+    state.audioElement.onloadedmetadata = () => resolve(state.audioElement.duration || 180);
+    setTimeout(() => resolve(state.audioElement.duration || 180), 2000);
+  });
+  state.audioDuration = duration;
+  dom.audioDuration.textContent = TimeUtil.toDisplay(duration);
+  dom.timeScrubber.max = duration;
 
+  // 2. USER-ENTERED LYRICS VERIFICATION (DO NOT ADD LYRICS FROM THE STUDIO END)
+  const userLyrics = (dom.lyricsTextarea?.value || '').trim();
+  if (!userLyrics) {
+    alert('Please enter your lyrics in the Timestamped Lyrics section (Step 3) before generating the video.');
+    const lyricsSection = document.querySelector('.lyrics-section') || dom.lyricsTextarea;
+    lyricsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    dom.lyricsTextarea?.focus();
+    return;
+  }
+
+  parseAndUpdateLyrics();
+
+  if (state.segments.length === 0) {
+    alert('Your lyrics need timestamps (e.g. [1] [00:04.50 - 00:09.20] Lyric line).\n\nTip: You can switch to the "Tap to Sync" tab to mark line timings with the song, or click "+ Add Line & Timing".');
+    const lyricsSection = document.querySelector('.lyrics-section') || dom.lyricsTextarea;
+    lyricsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Progress Tracker Step 1: Audio Analysis
+  setAutopilotStep(1, '[1/4] Audio analysis & duration verified...');
+
+  if (dom.btnRunAutopilot) {
+    dom.btnRunAutopilot.disabled = true;
+    dom.btnRunAutopilot.innerHTML = '<span>Processing Duet Karaoke Video...</span>';
+  }
+
+  try {
+    // Step 2: Validate User's Custom Lyrics & Duet Voice Parts
+    setAutopilotStep(2, `[2/4] Validated ${state.segments.length} lines of your lyrics & duet tags...`);
+    await new Promise(r => setTimeout(r, 350));
+
+    const language = detectLanguageFromText(userLyrics);
     if (dom.detectedLangBadge) {
-      dom.detectedLangBadge.textContent = `${language} (Male [1] & Female [2] Assigned)`;
+      dom.detectedLangBadge.textContent = `${language} (${state.segments.length} user lines)`;
       dom.detectedLangBadge.style.display = 'inline-flex';
     }
 
+    // Step 3: Layout & Canvas styling
+    setAutopilotStep(3, `[3/4] Arranging 1080p duet layout, singer colors & timing...`);
     renderCanvasFrame(0);
+    await new Promise(r => setTimeout(r, 350));
 
+    // Step 4: Video Generation
     const shouldAutoRender = dom.chkAutoRenderVideo ? dom.chkAutoRenderVideo.checked : true;
 
     if (shouldAutoRender && state.audioElement.src) {
-      setAutopilotStep(4, '[4/4] Auto-Rendering 1080p MP4 Video...');
+      setAutopilotStep(4, '[4/4] Auto-Rendering 1080p MP4 Video with your lyrics...');
       await new Promise(r => setTimeout(r, 600));
 
       if (state.ffmpegAvailable) {
@@ -1332,12 +1600,12 @@ async function runOneClickAutoDuet() {
 
       setAutopilotStep(5, 'Complete: Your 1080p Duet Karaoke Video is ready for download.');
     } else {
-      setAutopilotStep(5, `Complete: Lyrics, Male/Female separation, and timestamps generated for "${title}".`);
+      setAutopilotStep(5, `Complete: Duet video formatted with your ${state.segments.length} custom lyric lines.`);
     }
 
   } catch (err) {
-    console.error('[Auto Duet Error]', err);
-    alert(`Auto Duet: ${err.message}`);
+    console.error('[Duet Video Error]', err);
+    alert(`Duet Video Generator: ${err.message}`);
     setAutopilotStep(0, err.message);
   } finally {
     if (dom.btnRunAutopilot) {
@@ -2248,6 +2516,59 @@ function bindColorSync(pickerEl, hexEl, stateProp) {
   });
 }
 
+function applyStagingDimensions() {
+  const aspect = state.staging.aspectRatio || '16:9';
+  const quality = state.staging.quality || '720p';
+  const res = (RESOLUTIONS[aspect] && RESOLUTIONS[aspect][quality]) || { width: 1280, height: 720 };
+
+  dom.canvas.width = res.width;
+  dom.canvas.height = res.height;
+
+  dom.canvas.classList.remove('aspect-16-9', 'aspect-9-16', 'aspect-1-1');
+  if (aspect === '9:16') {
+    dom.canvas.classList.add('aspect-9-16');
+  } else if (aspect === '1:1') {
+    dom.canvas.classList.add('aspect-1-1');
+  } else {
+    dom.canvas.classList.add('aspect-16-9');
+  }
+
+  if (dom.previewAspectBadge) {
+    dom.previewAspectBadge.textContent = `${aspect} • ${quality}`;
+  }
+  renderCanvasFrame(state.currentTime);
+}
+
+function applyStagingTheme(themeId) {
+  state.staging.theme = themeId;
+  const th = VIDEO_THEMES[themeId] || VIDEO_THEMES.obsidian_gold;
+
+  state.color1 = th.singer1Color;
+  state.color2 = th.singer2Color;
+  state.color3 = th.bothColor;
+
+  if (dom.color1) dom.color1.value = th.singer1Color;
+  if (dom.color1Hex) dom.color1Hex.value = th.singer1Color;
+  if (dom.color2) dom.color2.value = th.singer2Color;
+  if (dom.color2Hex) dom.color2Hex.value = th.singer2Color;
+  if (dom.color3) dom.color3.value = th.bothColor;
+  if (dom.color3Hex) dom.color3Hex.value = th.bothColor;
+
+  renderCanvasFrame(state.currentTime);
+}
+
+function updateVolumeIcons() {
+  if (dom.previewVolIconOn && dom.previewVolIconOff) {
+    if (state.isMuted || state.volume === 0) {
+      dom.previewVolIconOn.style.display = 'none';
+      dom.previewVolIconOff.style.display = 'block';
+    } else {
+      dom.previewVolIconOn.style.display = 'block';
+      dom.previewVolIconOff.style.display = 'none';
+    }
+  }
+}
+
 function initEventListeners() {
   // Audio upload & Drag-and-Drop
   dom.audioDropzone.addEventListener('click', () => dom.audioFileInput.click());
@@ -2280,8 +2601,7 @@ function initEventListeners() {
     state.audioElement.src = '';
     dom.audioLoadedCard.style.display = 'none';
     dom.dropzonePrompt.style.display = 'flex';
-    dom.playIcon.style.display = 'block';
-    dom.pauseIcon.style.display = 'none';
+    setPlaybackState(false);
     state.currentTime = 0;
     updateTimeDisplay();
   });
@@ -2333,10 +2653,142 @@ function initEventListeners() {
   // Player controls
   dom.btnPlayPause.addEventListener('click', togglePlay);
   dom.timeScrubber.addEventListener('input', e => {
-    state.currentTime = parseFloat(e.target.value);
-    state.audioElement.currentTime = state.currentTime;
-    updateTimeDisplay();
+    seekToTime(parseFloat(e.target.value));
+  });
+
+  // Video Preview Player Transport Listeners (Screenshot Matched)
+  dom.btnCanvasBigPlay?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePlay();
+  });
+  dom.btnPreviewPlayPause?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePlay();
+  });
+  dom.btnPreviewRewind?.addEventListener('click', () => {
+    seekToTime(Math.max(0, state.currentTime - 5));
+  });
+  dom.btnPreviewForward?.addEventListener('click', () => {
+    const maxDur = state.audioDuration || 32;
+    seekToTime(Math.min(maxDur, state.currentTime + 5));
+  });
+  dom.previewTimeScrubber?.addEventListener('input', (e) => {
+    seekToTime(parseFloat(e.target.value));
+  });
+  dom.previewVolumeSlider?.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    state.volume = val;
+    if (state.audioElement) state.audioElement.volume = val;
+    state.isMuted = val === 0;
+    updateVolumeIcons();
+  });
+  dom.btnPreviewMute?.addEventListener('click', () => {
+    state.isMuted = !state.isMuted;
+    if (state.audioElement) {
+      state.audioElement.muted = state.isMuted;
+    }
+    updateVolumeIcons();
+  });
+  dom.btnPreviewFullscreen?.addEventListener('click', () => {
+    const elem = dom.stageWrapper || dom.canvas;
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  });
+
+  // Full-row Preview Button: Scroll to Preview Player & Trigger
+  dom.btnPreviewKaraoke?.addEventListener('click', () => {
+    dom.stageWrapper?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     renderCanvasFrame(state.currentTime);
+  });
+
+  // Staging Settings: Aspect Ratio
+  const aspectBtns = [dom.btnAspect169, dom.btnAspect916, dom.btnAspect11];
+  aspectBtns.forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      aspectBtns.forEach(b => b?.classList.remove('active'));
+      btn.classList.add('active');
+      state.staging.aspectRatio = btn.getAttribute('data-aspect') || '16:9';
+      applyStagingDimensions();
+    });
+  });
+
+  // Staging Settings: Theme & Singer Palette
+  const themeBtns = [dom.btnThemeObsidian, dom.btnThemeCyber, dom.btnThemeSlate];
+  themeBtns.forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      themeBtns.forEach(b => b?.classList.remove('active'));
+      btn.classList.add('active');
+      const themeId = btn.getAttribute('data-theme') || 'obsidian_gold';
+      applyStagingTheme(themeId);
+    });
+  });
+
+  // Staging Settings: Resolution
+  const qualBtns = [dom.btnQual720p, dom.btnQual1080p];
+  qualBtns.forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      qualBtns.forEach(b => b?.classList.remove('active'));
+      btn.classList.add('active');
+      state.staging.quality = btn.getAttribute('data-quality') || '720p';
+      applyStagingDimensions();
+    });
+  });
+
+  // Staging Settings: Frame Rate
+  const fpsBtns = [dom.btnFps30, dom.btnFps60];
+  fpsBtns.forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      fpsBtns.forEach(b => b?.classList.remove('active'));
+      btn.classList.add('active');
+      state.staging.fps = parseInt(btn.getAttribute('data-fps') || '30', 10);
+    });
+  });
+
+  // Staging Settings: Layer Overlays
+  dom.chkShowWaveform?.addEventListener('change', (e) => {
+    state.staging.showWaveform = e.target.checked;
+    renderCanvasFrame(state.currentTime);
+  });
+  dom.chkShowSingerBadges?.addEventListener('change', (e) => {
+    state.staging.showSingerBadges = e.target.checked;
+    renderCanvasFrame(state.currentTime);
+  });
+  dom.chkShowIntroDots?.addEventListener('change', (e) => {
+    state.staging.showIntroDots = e.target.checked;
+    renderCanvasFrame(state.currentTime);
+  });
+
+  // Staging Settings: Custom Track Title & Artist
+  dom.inputTrackTitle?.addEventListener('input', (e) => {
+    state.staging.trackTitle = e.target.value.trim() || 'Electric Horizon (Duet Edition)';
+    renderCanvasFrame(state.currentTime);
+  });
+  dom.inputTrackArtist?.addEventListener('input', (e) => {
+    state.staging.trackArtist = e.target.value.trim() || 'Karaoke Studio Ensemble';
+    renderCanvasFrame(state.currentTime);
+  });
+
+  // Keyboard navigation shortcuts (Space = play/pause, Left/Right = seek 5s)
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA'].includes(e.target?.tagName)) return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      togglePlay();
+    } else if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      const maxDur = state.audioDuration || 32;
+      seekToTime(Math.min(maxDur, state.currentTime + 5));
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      seekToTime(Math.max(0, state.currentTime - 5));
+    }
   });
 
   dom.playbackSpeed.addEventListener('change', e => {
@@ -2415,9 +2867,40 @@ function initEventListeners() {
     a.click();
   });
 
-  // Render Video Preview (100% free to render and preview; tokens are deducted ONLY on download!)
+  // Full Row Preview Button (Below 1st & 2nd Image)
+  dom.btnPreviewKaraoke?.addEventListener('click', () => {
+    parseAndUpdateLyrics();
+
+    // Smoothly scroll down to 3rd image preview stage window
+    const previewEl = dom.stageWrapper || $('preview-panel') || $('karaoke-canvas');
+    if (previewEl) {
+      previewEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Play song audio & run canvas preview animation
+    if (state.audioElement && state.audioElement.src) {
+      if (!state.isPlaying) {
+        togglePlay();
+      }
+    } else {
+      renderCanvasFrame(state.currentTime || 0);
+    }
+  });
+
+  // Render Video Preview & Download
   dom.btnRenderLive?.addEventListener('click', () => renderVideoLive());
-  dom.btnRenderUniversal?.addEventListener('click', () => renderVideoWithFfmpeg());
+  dom.btnRenderUniversal?.addEventListener('click', () => {
+    // If video is already rendered and ready, download directly
+    if (state.renderedVideoUrl && state.currentRenderPaid) {
+      triggerDirectFileDownload(state.renderedVideoUrl, state.renderedVideoFilename);
+      return;
+    }
+    if (state.renderedVideoUrl && !state.currentRenderPaid) {
+      handleDownloadVideoClick();
+      return;
+    }
+    renderVideoWithFfmpeg();
+  });
   dom.btnRenderBrowser?.addEventListener('click', () => renderVideoLive());
   dom.btnRenderFfmpeg?.addEventListener('click', () => renderVideoWithFfmpeg());
 
@@ -2570,6 +3053,9 @@ window.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
   checkServerStatus();
   initAntiRecordingProtection();
-  renderCanvasFrame(0);
+  applyStagingDimensions();
+  applyStagingTheme('obsidian_gold');
+  updateTimeDisplay();
+  renderCanvasFrame(state.currentTime);
   animationLoop();
 });
